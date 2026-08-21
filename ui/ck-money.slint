@@ -1,0 +1,484 @@
+// ═══════════════════════════════════════════════════════════════════════════
+// PUL O'TKAZISH VA QABUL QILISH — Flutter `wallet/send_screen.dart` va
+// `wallet/receive_screen.dart` bilan 1:1.
+//
+// Yuborish: NavBar (HAMYON · YUBORISH / Pul o'tkazish) → "Joriy balans 155₵"
+// qatori → QABUL QILUVCHI (+ SKANERLASH havolasi) maydoni → SUMMA maydoni →
+// "Yuborish" tugmasi. Boshqa hech narsa yo'q.
+//
+// Qabul qilish: NavBar (QABUL QILISH · QR / CYBERAQCHA qabul qilish) + izoh →
+// markazda skan-ramkali QR (CK belgisi) → HAMYON ID kartasi + TASDIQLANGAN
+// va ikki qator izoh.
+// ═══════════════════════════════════════════════════════════════════════════
+
+import {
+    Ck, CkIcons,
+    CkIcon, CkIconSlot, CkIconButton, CkBadge,
+    CkCard, CkCardFlat, CkPrimaryButton, CkField, CkNavBar, CkScroll,
+    CkDivider, CkQr, CkCoin,
+} from "ck-common.slint";
+
+// ── YUBORISH ────────────────────────────────────────────────────────────────
+
+export component SendPage inherits Rectangle {
+    background: transparent;
+
+    in property <string> balance: "155";
+    in-out property <string> amount: "";
+    in-out property <string> to: "";
+
+    callback back();
+    callback sent();
+    callback scan();
+
+    VerticalLayout {
+        padding-top: Ck.safe-top;
+
+        CkNavBar {
+            eyebrow: "HAMYON · YUBORISH";
+            title: "Pul o'tkazish";
+            back => {
+                root.back();
+            }
+        }
+
+        VerticalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-top: 4px;
+            spacing: 16px;
+            // Tepaga tekislanadi — aks holda maydonlar butun ekranga cho'ziladi.
+            alignment: start;
+
+            // Joriy balans.
+            CkCardFlat {
+                interactive: false;
+                height: 76px;
+
+                HorizontalLayout {
+                    padding-left: 18px;
+                    padding-right: 18px;
+                    spacing: 10px;
+
+                    Text {
+                        text: "Joriy balans";
+                        color: Ck.text-dim;
+                        font-family: Ck.sans;
+                        font-size: 15px;
+                        vertical-alignment: center;
+                        horizontal-stretch: 1;
+                    }
+
+                    HorizontalLayout {
+                        spacing: 4px;
+                        Text {
+                            text: root.balance;
+                            color: Ck.cyan;
+                            font-family: Ck.mono;
+                            font-size: 20px;
+                            font-weight: 700;
+                            vertical-alignment: center;
+                        }
+                        VerticalLayout {
+                            alignment: center;
+                            CkCoin { size: 17px; }
+                        }
+                    }
+                }
+            }
+
+            // Qabul qiluvchi.
+            VerticalLayout {
+                spacing: 8px;
+
+                HorizontalLayout {
+                    Text {
+                        text: "QABUL QILUVCHI";
+                        color: Ck.text-mute;
+                        font-family: Ck.mono;
+                        font-size: 11px;
+                        letter-spacing: 1.8px;
+                        vertical-alignment: center;
+                    }
+
+                    Rectangle { horizontal-stretch: 1; }
+
+                    Rectangle {
+                        width: sc.preferred-width;
+                        height: sc.preferred-height;
+
+                        TouchArea {
+                            clicked => {
+                                root.scan();
+                            }
+                        }
+
+                        sc := HorizontalLayout {
+                            spacing: 6px;
+
+                            VerticalLayout {
+                                alignment: center;
+                                CkIcon {
+                                    commands: CkIcons.qr;
+                                    size: 15px;
+                                    tint: Ck.cyan;
+                                }
+                            }
+
+                            Text {
+                                text: "SKANERLASH";
+                                color: Ck.cyan;
+                                font-family: Ck.mono;
+                                font-size: 11px;
+                                letter-spacing: 1.4px;
+                                vertical-alignment: center;
+                            }
+                        }
+                    }
+                }
+
+                Rectangle {
+                    height: 58px;
+                    border-radius: 16px;
+                    border-width: 1px;
+                    border-color: to-input.has-focus ? Ck.cyan.transparentize(0.55) : Ck.line;
+                    background: Ck.bg2;
+                    animate border-color { duration: 140ms; }
+
+                    HorizontalLayout {
+                        padding-left: 16px;
+                        padding-right: 16px;
+                        spacing: 12px;
+
+                        VerticalLayout {
+                            alignment: center;
+                            CkIcon {
+                                commands: CkIcons.user;
+                                size: 18px;
+                                tint: Ck.text-mute;
+                            }
+                        }
+
+                        Rectangle {
+                            horizontal-stretch: 1;
+
+                            to-input := TextInput {
+                                width: 100%;
+                                height: 100%;
+                                vertical-alignment: center;
+                                font-family: Ck.sans;
+                                font-size: 15px;
+                                color: Ck.text;
+                                text <=> root.to;
+                                selection-background-color: Ck.cyan.transparentize(0.6);
+                                selection-foreground-color: Ck.text;
+                            }
+
+                            if root.to == "": Text {
+                                x: 0;
+                                width: parent.width;
+                                height: parent.height;
+                                text: "Tashrif buyuruvchi ID'si";
+                                color: Ck.text-mute;
+                                font-family: Ck.sans;
+                                font-size: 15px;
+                                vertical-alignment: center;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Summa.
+            VerticalLayout {
+                spacing: 8px;
+
+                Text {
+                    text: "SUMMA";
+                    color: Ck.text-mute;
+                    font-family: Ck.mono;
+                    font-size: 11px;
+                    letter-spacing: 1.8px;
+                }
+
+                Rectangle {
+                    height: 58px;
+                    border-radius: 16px;
+                    border-width: 1px;
+                    border-color: am-input.has-focus ? Ck.cyan.transparentize(0.55) : Ck.line;
+                    background: Ck.bg2;
+                    animate border-color { duration: 140ms; }
+
+                    HorizontalLayout {
+                        padding-left: 16px;
+                        padding-right: 16px;
+                        spacing: 12px;
+
+                        VerticalLayout {
+                            alignment: center;
+                            CkIcon {
+                                commands: CkIcons.wallet;
+                                size: 18px;
+                                tint: Ck.text-mute;
+                            }
+                        }
+
+                        Rectangle {
+                            horizontal-stretch: 1;
+
+                            am-input := TextInput {
+                                width: 100%;
+                                height: 100%;
+                                vertical-alignment: center;
+                                font-family: Ck.sans;
+                                font-size: 15px;
+                                color: Ck.text;
+                                text <=> root.amount;
+                                selection-background-color: Ck.cyan.transparentize(0.6);
+                                selection-foreground-color: Ck.text;
+                            }
+
+                            if root.amount == "": Text {
+                                x: 0;
+                                width: parent.width;
+                                height: parent.height;
+                                text: "0";
+                                color: Ck.text-mute;
+                                font-family: Ck.sans;
+                                font-size: 15px;
+                                vertical-alignment: center;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Yuborish.
+            CkPrimaryButton {
+                text: "Yuborish";
+                icon: CkIcons.arrow-u;
+                clicked => {
+                    root.sent();
+                }
+            }
+        }
+    }
+}
+
+// ── QABUL QILISH ────────────────────────────────────────────────────────────
+
+export component ReceivePage inherits Rectangle {
+    background: transparent;
+
+    in property <string> address: "B0SdbAj2DdKgXcBtfB38";
+
+    callback back();
+
+    VerticalLayout {
+        padding-top: Ck.safe-top;
+        padding-bottom: Ck.safe-bottom;
+
+        CkNavBar {
+            eyebrow: "QABUL QILISH · QR";
+            title: "CYBERAQCHA qabul qilish";
+            back => {
+                root.back();
+            }
+        }
+
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+
+            Text {
+                text: "Bu QR kodni ko'rsating — sizga CYBERAQCHA yuborishlari uchun";
+                color: Ck.text-dim;
+                font-family: Ck.sans;
+                font-size: 14px;
+                wrap: word-wrap;
+            }
+        }
+
+        // ── QR (markazda) ───────────────────────────────────────────────
+        VerticalLayout {
+            vertical-stretch: 1;
+            alignment: center;
+
+            HorizontalLayout {
+                alignment: center;
+
+                Rectangle {
+                    width: 290px;
+                    height: 290px;
+
+                    Rectangle {
+                        width: 290px;
+                        height: 290px;
+                        border-radius: 40px;
+                        background: Ck.cyan.transparentize(0.84);
+                        drop-shadow-blur: 60px;
+                        drop-shadow-color: Ck.cyan.transparentize(0.55);
+                    }
+
+                    Rectangle {
+                        width: 254px;
+                        height: 254px;
+                        border-radius: 24px;
+                        background: #ffffff;
+
+                        CkQr {
+                            size: 218px;
+                            payload: root.address;
+                        }
+
+                        Rectangle {
+                            width: 44px;
+                            height: 44px;
+                            border-radius: 12px;
+                            border-width: 2px;
+                            border-color: Ck.cyan;
+                            background: #0a0a18;
+
+                            Text {
+                                text: "CK";
+                                color: Ck.cyan;
+                                font-family: Ck.mono;
+                                font-size: 15px;
+                                font-weight: 700;
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
+                            }
+                        }
+                    }
+
+                    // Skan-ramka burchaklari.
+                    for c in 4: Rectangle {
+                        property <bool> right: c == 1 || c == 2;
+                        property <bool> bottom: c >= 2;
+                        x: self.right ? parent.width - self.width : 0px;
+                        y: self.bottom ? parent.height - self.height : 0px;
+                        width: 32px;
+                        height: 32px;
+
+                        Rectangle {
+                            x: 0;
+                            y: parent.bottom ? parent.height - self.height : 0px;
+                            width: parent.width;
+                            height: 3px;
+                            background: Ck.cyan;
+                        }
+
+                        Rectangle {
+                            x: parent.right ? parent.width - self.width : 0px;
+                            y: 0;
+                            width: 3px;
+                            height: parent.height;
+                            background: Ck.cyan;
+                        }
+                    }
+                }
+            }
+        }
+
+        // ── HAMYON ID KARTASI ───────────────────────────────────────────
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-bottom: 8px;
+
+            CkCardFlat {
+                interactive: false;
+
+                VerticalLayout {
+                    padding: 18px;
+                    spacing: 14px;
+
+                    HorizontalLayout {
+                        spacing: 10px;
+
+                        VerticalLayout {
+                            horizontal-stretch: 1;
+                            spacing: 4px;
+
+                            Text {
+                                text: "HAMYON ID";
+                                color: Ck.text-mute;
+                                font-family: Ck.mono;
+                                font-size: 11px;
+                                letter-spacing: 1.8px;
+                            }
+
+                            Text {
+                                text: root.address;
+                                color: Ck.cyan;
+                                font-family: Ck.mono;
+                                font-size: 16px;
+                                font-weight: 600;
+                                overflow: elide;
+                            }
+                        }
+
+                        VerticalLayout {
+                            alignment: center;
+                            CkBadge {
+                                text: "TASDIQLANGAN";
+                                tint: Ck.mint;
+                                dot: true;
+                            }
+                        }
+                    }
+
+                    CkDivider { }
+
+                    HorizontalLayout {
+                        spacing: 10px;
+
+                        VerticalLayout {
+                            alignment: center;
+                            CkIcon {
+                                commands: CkIcons.shield;
+                                size: 17px;
+                                tint: Ck.mint;
+                            }
+                        }
+
+                        Text {
+                            text: "Hamyon manzili blokcheynda xavfsiz tasdiqlanadi";
+                            color: Ck.text-dim;
+                            font-family: Ck.sans;
+                            font-size: 14px;
+                            wrap: word-wrap;
+                            vertical-alignment: center;
+                            horizontal-stretch: 1;
+                        }
+                    }
+
+                    CkDivider { }
+
+                    HorizontalLayout {
+                        spacing: 10px;
+
+                        VerticalLayout {
+                            alignment: center;
+                            CkIcon {
+                                commands: CkIcons.qr;
+                                size: 17px;
+                                tint: Ck.text-dim;
+                            }
+                        }
+
+                        Text {
+                            text: "Yuboruvchi «Yuborish» bo'limida ushbu QR kodni skanerlaydi";
+                            color: Ck.text-dim;
+                            font-family: Ck.sans;
+                            font-size: 14px;
+                            wrap: word-wrap;
+                            vertical-alignment: center;
+                            horizontal-stretch: 1;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

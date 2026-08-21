@@ -1,0 +1,355 @@
+// ═══════════════════════════════════════════════════════════════════════════
+// HAMYON — Flutter `wallet/wallet_screen.dart` bilan 1:1.
+//
+// Tartib: TopBar (HAMYON · LEDGER / Hamyon) → hero karta ("Joriy balans",
+// katta holo-tanga, 155 ₵, "≈ UZS · LEDGER 0x..." qatori, uch tugma:
+// Qabul/Yuborish/Statistika) → ikkita stat (YIG'ILDI / SARFLANDI) →
+// "So'nggi tranzaksiyalar" ro'yxati (ikon, nom, sana, hash, summa).
+// ═══════════════════════════════════════════════════════════════════════════
+
+import {
+    Ck, CkIcons,
+    CkIcon, CkIconSlot, CkIconButton,
+    CkHoloCoin, CkCoin, CkHeroCard, CkCardFlat, CkStat,
+    CkGlassButton, CkTopBar, CkSectionHead, CkScroll,
+} from "ck-common.slint";
+
+export struct CkTx {
+    title: string,
+    date: string,
+    hash: string,
+    amount: string,
+    positive: bool,
+    icon: string,
+    tint: color,
+}
+
+export component WalletPage inherits Rectangle {
+    // Qobiq ichida butun joyni egallaydi; fon qobiqda chiziladi.
+    background: transparent;
+
+    in property <string> balance: "155";
+    in property <string> ledger: "≈ 15,500 UZS · LEDGER 0xB0SD...fb38";
+    in property <string> earned: "+275";
+    in property <string> spent: "-120";
+
+    in property <[CkTx]> transactions: [
+        {
+            title: "Do'kondan xarid", date: "10 iyl · 17:58", hash: "0xf63...fb",
+            amount: "-120", positive: false, icon: CkIcons.shop, tint: #ffb547,
+        },
+        {
+            title: "Xotira o'yini", date: "10 iyl · 17:58", hash: "0x679...df",
+            amount: "+20", positive: true, icon: CkIcons.game, tint: #ff2d95,
+        },
+        {
+            title: "So'rovnomani to'ldir", date: "10 iyl · 17:58", hash: "0x486...c2",
+            amount: "+25", positive: true, icon: CkIcons.check-circle, tint: #5bffc2,
+        },
+        {
+            title: "Ijtimoiy tarmoqda ulash", date: "10 iyl · 17:58", hash: "0x033...45",
+            amount: "+30", positive: true, icon: CkIcons.share, tint: #00e5ff,
+        },
+        {
+            title: "Cyber Quiz ga qo'shil", date: "10 iyl · 17:58", hash: "0x52e...31",
+            amount: "+50", positive: true, icon: CkIcons.book, tint: #b8a4ff,
+        },
+        {
+            title: "Tadbirga kirish bonusi", date: "10 iyl · 17:58", hash: "0xf79...65",
+            amount: "+100", positive: true, icon: CkIcons.ticket, tint: #00e5ff,
+        },
+        {
+            title: "Ro'yxatdan o'tish bonusi", date: "10 iyl · 17:58", hash: "0x5bf...ae",
+            amount: "+50", positive: true, icon: CkIcons.user, tint: #5bffc2,
+        },
+    ];
+
+    // Sahifa ochiqmi — animatsiyalarni boshqarish uchun.
+    in property <bool> active: true;
+
+    callback more-clicked();
+    callback receive-clicked();
+    callback send-clicked();
+    callback stats-clicked();
+    callback tx-clicked(index: int);
+
+    CkScroll {
+        CkTopBar {
+            eyebrow: "HAMYON · LEDGER";
+            title: "Hamyon";
+        }
+
+        // ── HERO: JORIY BALANS ──────────────────────────────────────────
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+
+            CkHeroCard {
+                VerticalLayout {
+                    padding: 20px;
+                    spacing: 14px;
+
+                    Text {
+                        text: "Joriy balans";
+                        color: Ck.cyan;
+                        font-family: Ck.mono;
+                        font-size: 12px;
+                        letter-spacing: 2px;
+                        horizontal-alignment: center;
+                    }
+
+                    HorizontalLayout {
+                        alignment: center;
+                        CkHoloCoin {
+                            size: 132px;
+                        }
+                    }
+
+                    HorizontalLayout {
+                        alignment: center;
+                        spacing: 8px;
+
+                        Text {
+                            text: root.balance;
+                            color: Ck.text;
+                            font-family: Ck.sans;
+                            font-size: 44px;
+                            font-weight: 700;
+                        }
+
+                        VerticalLayout {
+                            alignment: end;
+                            padding-bottom: 11px;
+                            CkCoin {
+                                size: 30px;
+                            }
+                        }
+                    }
+
+                    Text {
+                        text: root.ledger;
+                        color: Ck.text-mute;
+                        font-family: Ck.mono;
+                        font-size: 10px;
+                        letter-spacing: 0.8px;
+                        horizontal-alignment: center;
+                        overflow: elide;
+                    }
+
+                    HorizontalLayout {
+                        spacing: 8px;
+
+                        CkGlassButton {
+                            horizontal-stretch: 1;
+                            icon: CkIcons.qr;
+                            text: "Qabul...";
+                            clicked => {
+                                root.receive-clicked();
+                            }
+                        }
+
+                        CkGlassButton {
+                            horizontal-stretch: 1;
+                            icon: CkIcons.arrow-u;
+                            text: "Yubor...";
+                            clicked => {
+                                root.send-clicked();
+                            }
+                        }
+
+                        CkGlassButton {
+                            horizontal-stretch: 1;
+                            icon: CkIcons.trend;
+                            text: "Statis...";
+                            clicked => {
+                                root.stats-clicked();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // ── YIG'ILDI / SARFLANDI ────────────────────────────────────────
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-top: 14px;
+            spacing: 12px;
+
+            CkCardFlat {
+                horizontal-stretch: 1;
+                interactive: false;
+
+                VerticalLayout {
+                    padding: 16px;
+                    spacing: 6px;
+
+                    Text {
+                        text: "YIG'ILDI · 30K";
+                        color: Ck.text-mute;
+                        font-family: Ck.mono;
+                        font-size: 10px;
+                        letter-spacing: 1.6px;
+                    }
+
+                    HorizontalLayout {
+                        spacing: 4px;
+                        alignment: start;
+                        Text {
+                            text: root.earned;
+                            color: Ck.mint;
+                            font-family: Ck.mono;
+                            font-size: 24px;
+                            font-weight: 700;
+                            vertical-alignment: center;
+                        }
+                        VerticalLayout {
+                            alignment: center;
+                            CkCoin { size: 20px; }
+                        }
+                    }
+                }
+            }
+
+            CkCardFlat {
+                horizontal-stretch: 1;
+                interactive: false;
+
+                VerticalLayout {
+                    padding: 16px;
+                    spacing: 6px;
+
+                    Text {
+                        text: "SARFLANDI · 30K";
+                        color: Ck.text-mute;
+                        font-family: Ck.mono;
+                        font-size: 10px;
+                        letter-spacing: 1.6px;
+                    }
+
+                    HorizontalLayout {
+                        spacing: 4px;
+                        alignment: start;
+                        Text {
+                            text: root.spent;
+                            color: Ck.amber;
+                            font-family: Ck.mono;
+                            font-size: 24px;
+                            font-weight: 700;
+                            vertical-alignment: center;
+                        }
+                        VerticalLayout {
+                            alignment: center;
+                            CkCoin { size: 20px; }
+                        }
+                    }
+                }
+            }
+        }
+
+        // ── SO'NGGI TRANZAKSIYALAR ──────────────────────────────────────
+        CkSectionHead {
+            title: "So'nggi tranzaksiyalar";
+            action: "BARCHASI";
+            action-clicked => {
+                root.more-clicked();
+            }
+        }
+
+        VerticalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            spacing: 10px;
+
+            for tx[index] in root.transactions: CkCardFlat {
+                clicked => {
+                    root.tx-clicked(index);
+                }
+
+                HorizontalLayout {
+                    padding: 14px;
+                    spacing: 12px;
+
+                    VerticalLayout {
+                        alignment: center;
+                        Rectangle {
+                            width: 44px;
+                            height: 44px;
+                            border-radius: 14px;
+                            background: tx.tint.transparentize(0.86);
+                            CkIcon {
+                                commands: tx.icon;
+                                size: 20px;
+                                tint: tx.tint;
+                            }
+                        }
+                    }
+
+                    VerticalLayout {
+                        horizontal-stretch: 1;
+                        alignment: center;
+                        spacing: 3px;
+
+                        Text {
+                            text: tx.title;
+                            color: Ck.text;
+                            font-family: Ck.sans;
+                            font-size: 14px;
+                            font-weight: 600;
+                            overflow: elide;
+                        }
+
+                        Text {
+                            text: tx.date;
+                            color: Ck.text-dim;
+                            font-family: Ck.mono;
+                            font-size: 11px;
+                        }
+
+                        HorizontalLayout {
+                            spacing: 4px;
+                            alignment: start;
+
+                            VerticalLayout {
+                                alignment: center;
+                                CkIcon {
+                                    commands: CkIcons.arrow-u;
+                                    size: 10px;
+                                    tint: Ck.text-mute;
+                                }
+                            }
+
+                            Text {
+                                text: tx.hash;
+                                color: Ck.text-mute;
+                                font-family: Ck.mono;
+                                font-size: 10px;
+                            }
+                        }
+                    }
+
+                    VerticalLayout {
+                        alignment: center;
+                        HorizontalLayout {
+                            spacing: 5px;
+
+                            Text {
+                                text: tx.amount;
+                                color: tx.positive ? Ck.mint : Ck.amber;
+                                font-family: Ck.mono;
+                                font-size: 16px;
+                                font-weight: 700;
+                                vertical-alignment: center;
+                            }
+                            VerticalLayout {
+                                alignment: center;
+                                CkCoin { size: 14px; }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

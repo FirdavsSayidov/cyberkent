@@ -1,0 +1,118 @@
+// Bitta vazifa qatori.
+//
+// Ataylab std-widgets'dagi CheckBox ishlatilmadi: CheckBox bosilganda o'zining
+// `checked` xossasiga qiymat yozadi va shu bilan `checked: todo.done` binding'ini
+// buzadi. Natijada qator o'chirilganda ListView instansiyalarni qayta ishlatib,
+// eski belgi ko'rinib qolishi mumkin. Primitivlardan yasalgan bu variantda
+// `done` faqat modeldan o'qiladi — hech qachon ustiga yozilmaydi.
+
+import { Palette } from "std-widgets.slint";
+
+export component TodoRow inherits Rectangle {
+    in property <string> title;
+    in property <bool> done;
+
+    callback toggled();
+    callback removed();
+
+    height: 46px;
+    border-radius: 8px;
+    background: touch.has-hover || del-touch.has-hover
+        ? Palette.alternate-background
+        : transparent;
+    animate background { duration: 100ms; }
+
+    // Butun qatorni qoplaydi — qatorga bosish vazifani belgilaydi.
+    touch := TouchArea {
+        clicked => {
+            root.toggled();
+        }
+    }
+
+    HorizontalLayout {
+        padding-left: 12px;
+        padding-right: 10px;
+        spacing: 12px;
+
+        // ── belgilash kvadrati ──────────────────────────────────────────
+        VerticalLayout {
+            alignment: center;
+
+            Rectangle {
+                width: 20px;
+                height: 20px;
+                border-radius: 6px;
+                border-width: 2px;
+                border-color: root.done ? Palette.accent-background : Palette.border;
+                background: root.done ? Palette.accent-background : transparent;
+
+                if root.done: Text {
+                    text: "✓";
+                    font-size: 13px;
+                    font-weight: 800;
+                    color: Palette.accent-foreground;
+                }
+            }
+        }
+
+        // ── sarlavha (bajarilgan bo'lsa ustidan chizilgan) ──────────────
+        VerticalLayout {
+            alignment: center;
+            max-width: root.width - 110px;
+
+            Rectangle {
+                label := Text {
+                    text: root.title;
+                    font-size: 15px;
+                    overflow: elide;
+                    color: root.done
+                        ? Palette.foreground.transparentize(0.55)
+                        : Palette.foreground;
+                }
+
+                // Slint'da Text uchun strikethrough yo'q — 1px'li Rectangle
+                // label'ning o'rtasidan o'tadi (kengligi parent'dan 100%).
+                if root.done: Rectangle {
+                    y: parent.height / 2;
+                    height: 1px;
+                    background: label.color;
+                }
+            }
+        }
+
+        // o'chirish tugmasini o'ngga suradigan bo'shliq
+        Rectangle {
+            horizontal-stretch: 1;
+        }
+
+        // ── o'chirish ───────────────────────────────────────────────────
+        VerticalLayout {
+            alignment: center;
+
+            Rectangle {
+                width: 26px;
+                height: 26px;
+                border-radius: 13px;
+                // Qator hover bo'lganda ko'rinadi. del-touch hover'ni o'ziga
+                // olganda touch.has-hover false bo'ladi — shuning uchun ikkisi
+                // ham tekshiriladi, aks holda tugma ko'z oldida yo'qoladi.
+                visible: touch.has-hover || del-touch.has-hover;
+                background: del-touch.has-hover ? #e5484d : transparent;
+
+                Text {
+                    text: "✕";
+                    font-size: 12px;
+                    color: del-touch.has-hover
+                        ? #ffffff
+                        : Palette.foreground.transparentize(0.4);
+                }
+
+                del-touch := TouchArea {
+                    clicked => {
+                        root.removed();
+                    }
+                }
+            }
+        }
+    }
+}

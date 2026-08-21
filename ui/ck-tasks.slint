@@ -1,0 +1,295 @@
+// ═══════════════════════════════════════════════════════════════════════════
+// TOPSHIRIQLAR — Flutter `user/tasks_screen.dart` bilan 1:1.
+//
+// Tartib: TopBar (GAMIFIKATSIYA / Topshiriqlar / "Bajaring va CyberAqcha
+// to'plang") → "BUGUNGI DARAJA · Cyber Rookie · 3/5" hero (kubok, progress) →
+// chiplar (TOPSHIRIQLAR / O'YINLAR / YUTUQLAR) → topshiriq kartalari:
+// ikon + nom + "Bajarib, CYBERAQCHA oling." + "+N" va "Bajarish" tugmasi
+// yoki BAJARILDI badge (chizilgan nom, xira karta).
+// ═══════════════════════════════════════════════════════════════════════════
+
+import {
+    Ck, CkIcons,
+    CkIcon, CkIconSlot, CkChip, CkBadge, CkCardFlat, CkHeroCard,
+    CkProgress, CkNavBar, CkScroll, CkCoin,
+} from "ck-common.slint";
+
+export struct CkTask {
+    icon: string,
+    title: string,
+    sub: string,
+    reward: string,
+    tint: color,
+    done: bool,
+    progress: float,
+    action: bool,
+}
+
+export component TasksPage inherits Rectangle {
+    background: transparent;
+
+    in property <string> level: "Cyber Rookie";
+    in property <string> level-sub: "3/5 topshiriq bajarildi";
+    in property <float> level-progress: 0.6;
+
+    in property <[string]> tabs: ["TOPSHIRIQLAR", "O'YINLAR", "YUTUQLAR"];
+    in-out property <int> tab: 0;
+
+    in property <[CkTask]> tasks: [
+        {
+            icon: CkIcons.logout, title: "Tadbirga kel", sub: "Bajarib, CYBERAQCHA oling.",
+            reward: "+100", tint: #00e5ff, done: false, progress: 0, action: true,
+        },
+        {
+            icon: CkIcons.check, title: "Cyber Quiz ga qo'shil", sub: "Bajarib, CYBERAQCHA oling.",
+            reward: "+50", tint: #5bffc2, done: true, progress: 0, action: false,
+        },
+        {
+            icon: CkIcons.pin, title: "3 ta stendga tashrif buyur", sub: "Bajarib, CYBERAQCHA oling.",
+            reward: "+40", tint: #5bffc2, done: false, progress: 0, action: true,
+        },
+        {
+            icon: CkIcons.check, title: "Ijtimoiy tarmoqda ulash", sub: "Bajarib, CYBERAQCHA oling.",
+            reward: "+30", tint: #5bffc2, done: true, progress: 0, action: false,
+        },
+        {
+            icon: CkIcons.check, title: "So'rovnomani to'ldir", sub: "Bajarib, CYBERAQCHA oling.",
+            reward: "+25", tint: #5bffc2, done: true, progress: 0, action: false,
+        },
+    ];
+
+    callback task-clicked(index: int);
+    callback game-clicked(index: int);
+    callback back();
+
+    CkScroll {
+        CkNavBar {
+            eyebrow: "GAMIFIKATSIYA";
+            title: "Topshiriqlar";
+            back => {
+                root.back();
+            }
+        }
+
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-bottom: 8px;
+
+            Text {
+                text: "Bajaring va CyberAqcha to'plang";
+                color: Ck.text-dim;
+                font-family: Ck.sans;
+                font-size: 14px;
+            }
+        }
+
+        // ── BUGUNGI DARAJA ──────────────────────────────────────────────
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+
+            CkHeroCard {
+                interactive: false;
+
+                VerticalLayout {
+                    padding: 18px;
+                    spacing: 14px;
+
+                    HorizontalLayout {
+                        spacing: 12px;
+
+                        VerticalLayout {
+                            horizontal-stretch: 1;
+                            alignment: center;
+                            spacing: 4px;
+
+                            Text {
+                                text: "BUGUNGI DARAJA";
+                                color: Ck.cyan;
+                                font-family: Ck.mono;
+                                font-size: 11px;
+                                letter-spacing: 2px;
+                            }
+
+                            Text {
+                                text: root.level;
+                                color: Ck.text;
+                                font-family: Ck.sans;
+                                font-size: 26px;
+                                font-weight: 700;
+                            }
+
+                            Text {
+                                text: root.level-sub;
+                                color: Ck.text-dim;
+                                font-family: Ck.sans;
+                                font-size: 13px;
+                            }
+                        }
+
+                        VerticalLayout {
+                            alignment: center;
+
+                            Rectangle {
+                                width: 64px;
+                                height: 64px;
+                                border-radius: 32px;
+                                border-width: 1px;
+                                border-color: Ck.mint.transparentize(0.6);
+                                background: Ck.mint.transparentize(0.84);
+
+                                CkIcon {
+                                    commands: CkIcons.trophy;
+                                    size: 28px;
+                                    tint: Ck.mint;
+                                }
+                            }
+                        }
+                    }
+
+                    CkProgress {
+                        value: root.level-progress;
+                    }
+                }
+            }
+        }
+
+        // ── BO'LIMLAR ───────────────────────────────────────────────────
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-top: 14px;
+            spacing: 8px;
+            alignment: start;
+
+            for name[index] in root.tabs: CkChip {
+                text: name;
+                active: root.tab == index;
+                clicked => {
+                    root.tab = index;
+                }
+            }
+        }
+
+        // ── RO'YXAT ─────────────────────────────────────────────────────
+        VerticalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-top: 14px;
+            spacing: 12px;
+
+            for task[index] in root.tasks: CkCardFlat {
+                opacity: task.done ? 0.62 : 1.0;
+                clicked => {
+                    if (root.tab == 1) {
+                        root.game-clicked(index);
+                    } else {
+                        root.task-clicked(index);
+                    }
+                }
+
+                HorizontalLayout {
+                    padding: 16px;
+                    spacing: 14px;
+
+                    VerticalLayout {
+                        alignment: center;
+
+                        Rectangle {
+                            width: 52px;
+                            height: 52px;
+                            border-radius: 14px;
+                            background: task.done
+                                ? Ck.mint.transparentize(0.9)
+                                : task.tint.transparentize(0.86);
+
+                            CkIcon {
+                                commands: task.done ? CkIcons.check : task.icon;
+                                size: 24px;
+                                tint: task.done ? Ck.mint : task.tint;
+                            }
+                        }
+                    }
+
+                    VerticalLayout {
+                        horizontal-stretch: 1;
+                        alignment: center;
+                        spacing: 4px;
+
+                        Text {
+                            text: task.title;
+                            // Slint'da chizib tashlangan matn yo'q — bajarilgani
+                            // rang va shaffoflik bilan ko'rsatiladi.
+                            color: task.done ? Ck.text-mute : Ck.text;
+                            font-family: Ck.sans;
+                            font-size: 16px;
+                            font-weight: 600;
+                            overflow: elide;
+                        }
+
+                        Text {
+                            text: task.sub;
+                            color: Ck.text-dim;
+                            font-family: Ck.sans;
+                            font-size: 13px;
+                            overflow: elide;
+                        }
+                    }
+
+                    VerticalLayout {
+                        alignment: center;
+                        spacing: 8px;
+
+                        HorizontalLayout {
+                            spacing: 4px;
+                            alignment: end;
+                            Text {
+                                text: task.reward;
+                                color: task.done ? Ck.text-mute : Ck.text;
+                                font-family: Ck.mono;
+                                font-size: 14px;
+                                font-weight: 700;
+                                vertical-alignment: center;
+                            }
+                            VerticalLayout {
+                                alignment: center;
+                                CkCoin { size: 14px; }
+                            }
+                        }
+
+                        if !task.done: Rectangle {
+                            width: 96px;
+                            height: 40px;
+                            border-radius: 14px;
+                            background: @linear-gradient(135deg, #00e5ff, #7c4dff);
+                            opacity: bt.pressed ? 0.85 : 1.0;
+                            animate opacity { duration: 110ms; }
+
+                            bt := TouchArea {
+                                clicked => {
+                                    root.task-clicked(index);
+                                }
+                            }
+
+                            Text {
+                                text: "Bajarish";
+                                color: Ck.bg1;
+                                font-family: Ck.sans;
+                                font-size: 14px;
+                                font-weight: 700;
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
+                            }
+                        }
+
+                        if task.done: CkBadge {
+                            text: "BAJARILDI";
+                            tint: Ck.mint;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,598 @@
+// ═══════════════════════════════════════════════════════════════════════════
+// MAHSULOT TAFSILOTI VA TO'LOV QR — Flutter `shop/product_detail_screen.dart`
+// va `shop/payment_qr_screen.dart` bilan 1:1.
+//
+// Mahsulot: katta rasm (orqaga + yurak tugmalari ustida) → HOODIE badge →
+// nom → narx + "QOLDIQ · 14" → Tavsif → Yetkazib berish kartasi → Miqdor
+// (- 1 +) → "Sotib olish · 200 ₵" tugmasi.
+//
+// To'lov QR: NavBar (TO'LOV · TO'LOV QR) → "Sotuvchiga ko'rsating" +
+// "Buyurtmangizni skanerlash" → skan-ramkali QR → karta (Buyurtma / To'lov
+// summasi / BLOCKCHAIN HASH) → "KUTILMOQDA · 04:56" holati.
+// ═══════════════════════════════════════════════════════════════════════════
+
+import {
+    Ck, CkIcons,
+    CkIcon, CkIconSlot, CkIconButton, CkBadge, CkCoin,
+    CkCardFlat, CkQr, CkDivider, CkNavBar,
+} from "ck-common.slint";
+
+// ── MAHSULOT TAFSILOTI ──────────────────────────────────────────────────────
+
+export component ProductDetailPage inherits Rectangle {
+    background: Ck.bg0;
+
+    in property <string> title: "CK Hoodie";
+    in property <string> tag: "HOODIE";
+    in property <string> price: "200";
+    // Narxning butun-son qiymati (Store.buy uchun; matn `price` bilan mos).
+    in property <int> price-value: 200;
+    in property <string> stock: "QOLDIQ · 14";
+    in property <string> about: "Cyberkent rasmiy mahsuloti.";
+    in property <string> pickup: "CK Cyber-do'kon · IT Park";
+    in property <string> pickup-sub: "QR ko'rsating · 5 daqiqada tayyor";
+    in-out property <int> qty: 1;
+
+    callback back();
+    callback favourite();
+    callback buy();
+
+    Flickable {
+        width: 100%;
+        height: parent.height - 110px;
+        viewport-width: self.width;
+        viewport-height: body.preferred-height;
+
+        body := VerticalLayout {
+            width: parent.width;
+            alignment: start;
+
+            // ── KATTA RASM ──────────────────────────────────────────────
+            Rectangle {
+                height: 280px;
+                background: Ck.bg1;
+                clip: true;
+
+                Rectangle {
+                    x: parent.width * 0.3 - self.width / 2;
+                    y: parent.height * 0.3 - self.height / 2;
+                    width: parent.width * 0.9;
+                    height: self.width;
+                    background: @radial-gradient(circle, Ck.magenta.transparentize(0.72) 0%, #00000000 60%);
+                }
+
+                Rectangle {
+                    x: parent.width * 0.75 - self.width / 2;
+                    y: parent.height * 0.72 - self.height / 2;
+                    width: parent.width * 0.8;
+                    height: self.width;
+                    background: @radial-gradient(circle, Ck.cyan.transparentize(0.75) 0%, #00000000 60%);
+                }
+
+                CkIcon {
+                    commands: CkIcons.package;
+                    size: 80px;
+                    tint: #9a96b8;
+                }
+            }
+
+            // ── MA'LUMOT ────────────────────────────────────────────────
+            VerticalLayout {
+                padding-left: 20px;
+                padding-right: 20px;
+                padding-top: 16px;
+                // Pastda qotib turgan "Sotib olish" tugmasi ostida qolmasin.
+                padding-bottom: 28px;
+                spacing: 10px;
+
+                HorizontalLayout {
+                    alignment: start;
+                    CkBadge {
+                        text: root.tag;
+                        tint: Ck.lilac;
+                    }
+                }
+
+                Text {
+                    text: root.title;
+                    color: Ck.text;
+                    font-family: Ck.sans;
+                    font-size: 26px;
+                    font-weight: 700;
+                }
+
+                HorizontalLayout {
+                    spacing: 10px;
+
+                    VerticalLayout {
+                        alignment: center;
+                        CkCoin { size: 30px; }
+                    }
+
+                    Text {
+                        text: root.price;
+                        color: Ck.cyan;
+                        font-family: Ck.sans;
+                        font-size: 34px;
+                        font-weight: 700;
+                        vertical-alignment: center;
+                    }
+
+                    VerticalLayout {
+                        alignment: center;
+                        CkCoin { size: 20px; }
+                    }
+
+                    Rectangle { horizontal-stretch: 1; }
+
+                    VerticalLayout {
+                        alignment: center;
+                        CkBadge {
+                            text: root.stock;
+                            tint: Ck.mint;
+                        }
+                    }
+                }
+
+                CkDivider { }
+
+                Text {
+                    text: "Tavsif";
+                    color: Ck.cyan;
+                    font-family: Ck.mono;
+                    font-size: 12px;
+                    letter-spacing: 2px;
+                }
+
+                Text {
+                    text: root.about;
+                    color: Ck.text-dim;
+                    font-family: Ck.sans;
+                    font-size: 16px;
+                    wrap: word-wrap;
+                }
+
+                Text {
+                    text: "Yetkazib berish";
+                    color: Ck.cyan;
+                    font-family: Ck.mono;
+                    font-size: 12px;
+                    letter-spacing: 2px;
+                }
+
+                CkCardFlat {
+                    interactive: false;
+
+                    HorizontalLayout {
+                        padding: 16px;
+                        spacing: 14px;
+
+                        VerticalLayout {
+                            alignment: center;
+                            CkIcon {
+                                commands: CkIcons.package;
+                                size: 24px;
+                                tint: Ck.cyan;
+                            }
+                        }
+
+                        VerticalLayout {
+                            horizontal-stretch: 1;
+                            spacing: 3px;
+
+                            Text {
+                                text: root.pickup;
+                                color: Ck.text;
+                                font-family: Ck.sans;
+                                font-size: 15px;
+                                font-weight: 600;
+                            }
+
+                            Text {
+                                text: root.pickup-sub;
+                                color: Ck.text-dim;
+                                font-family: Ck.sans;
+                                font-size: 14px;
+                            }
+                        }
+                    }
+                }
+
+                Text {
+                    text: "Miqdor";
+                    color: Ck.cyan;
+                    font-family: Ck.mono;
+                    font-size: 12px;
+                    letter-spacing: 2px;
+                }
+
+                // Miqdor tanlagich.
+                Rectangle {
+                    height: 66px;
+                    border-radius: 18px;
+                    border-width: 1px;
+                    border-color: Ck.line;
+                    background: Ck.bg1;
+
+                    HorizontalLayout {
+                        padding: 10px;
+                        spacing: 10px;
+
+                        Rectangle {
+                            width: 46px;
+                            border-radius: 12px;
+                            background: minus.pressed ? Ck.bg3 : Ck.bg2;
+                            animate background { duration: 100ms; }
+
+                            minus := TouchArea {
+                                clicked => {
+                                    if (root.qty > 1) {
+                                        root.qty -= 1;
+                                    }
+                                }
+                            }
+
+                            CkIcon {
+                                commands: CkIcons.minus;
+                                size: 16px;
+                                tint: Ck.text;
+                            }
+                        }
+
+                        Text {
+                            text: root.qty;
+                            color: Ck.text;
+                            font-family: Ck.sans;
+                            font-size: 22px;
+                            font-weight: 700;
+                            horizontal-alignment: center;
+                            vertical-alignment: center;
+                            horizontal-stretch: 1;
+                        }
+
+                        Rectangle {
+                            width: 46px;
+                            border-radius: 12px;
+                            background: plus.pressed ? Ck.bg3 : Ck.bg2;
+                            animate background { duration: 100ms; }
+
+                            plus := TouchArea {
+                                clicked => {
+                                    root.qty += 1;
+                                }
+                            }
+
+                            CkIcon {
+                                commands: CkIcons.plus;
+                                size: 16px;
+                                tint: Ck.text;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // ── USTKI TUGMALAR ──────────────────────────────────────────────────
+    CkIconButton {
+        x: 20px;
+        y: Ck.safe-top + 10px;
+        icon: CkIcons.chev-l;
+        clicked => {
+            root.back();
+        }
+    }
+
+    CkIconButton {
+        x: parent.width - self.width - 20px;
+        y: Ck.safe-top + 10px;
+        icon: CkIcons.heart;
+        clicked => {
+            root.favourite();
+        }
+    }
+
+    // ── PASTKI CTA ──────────────────────────────────────────────────────
+    Rectangle {
+        x: 0;
+        y: parent.height - self.height;
+        width: parent.width;
+        height: 110px;
+        background: @linear-gradient(180deg, #06060f00 0%, #06060fe6 40%);
+
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-top: 22px;
+            padding-bottom: 28px;
+
+            Rectangle {
+                height: 56px;
+                border-radius: 18px;
+                background: @linear-gradient(135deg, #00e5ff, #7c4dff);
+                opacity: buy-t.pressed ? 0.85 : 1.0;
+                animate opacity { duration: 110ms; }
+                drop-shadow-blur: 18px;
+                drop-shadow-color: Ck.cyan.transparentize(0.6);
+
+                buy-t := TouchArea {
+                    clicked => {
+                        root.buy();
+                    }
+                }
+
+                HorizontalLayout {
+                    alignment: center;
+                    spacing: 10px;
+
+                    VerticalLayout {
+                        alignment: center;
+                        CkIcon {
+                            commands: CkIcons.wallet;
+                            size: 18px;
+                            tint: Ck.bg1;
+                        }
+                    }
+
+                    Text {
+                        text: "Sotib olish · " + root.price;
+                        color: Ck.bg1;
+                        font-family: Ck.sans;
+                        font-size: 17px;
+                        font-weight: 700;
+                        vertical-alignment: center;
+                    }
+
+                    VerticalLayout {
+                        alignment: center;
+                        CkCoin { size: 16px; }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ── TO'LOV QR ───────────────────────────────────────────────────────────────
+
+export component PaymentQrPage inherits Rectangle {
+    background: transparent;
+
+    in property <string> order-id: "#PIpaZWBFAeNcVd962ui1";
+    in property <string> amount: "30";
+    in property <string> hash: "0xcaed...6741";
+    in property <string> countdown: "KUTILMOQDA · 04:56";
+
+    callback back();
+    callback paid();
+
+    VerticalLayout {
+        padding-top: Ck.safe-top;
+
+        CkNavBar {
+            eyebrow: "TO'LOV · TO'LOV QR";
+            title: "";
+            back => {
+                root.back();
+            }
+        }
+
+        VerticalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            spacing: 4px;
+
+            Text {
+                text: "Sotuvchiga ko'rsating";
+                color: Ck.cyan;
+                font-family: Ck.mono;
+                font-size: 13px;
+                letter-spacing: 1.8px;
+                horizontal-alignment: center;
+            }
+
+            Text {
+                text: "Buyurtmangizni skanerlash";
+                color: Ck.text;
+                font-family: Ck.sans;
+                font-size: 26px;
+                font-weight: 700;
+                horizontal-alignment: center;
+            }
+        }
+
+        // ── QR ──────────────────────────────────────────────────────────
+        VerticalLayout {
+            padding-top: 14px;
+            alignment: start;
+
+            HorizontalLayout {
+                alignment: center;
+
+                Rectangle {
+                    width: 320px;
+                    height: 320px;
+
+                    Rectangle {
+                        width: 320px;
+                        height: 320px;
+                        border-radius: 34px;
+                        background: Ck.cyan.transparentize(0.82);
+                        drop-shadow-blur: 60px;
+                        drop-shadow-color: Ck.cyan.transparentize(0.55);
+                    }
+
+                    Rectangle {
+                        width: 286px;
+                        height: 286px;
+                        border-radius: 22px;
+                        background: #ffffff;
+
+                        CkQr {
+                            size: 252px;
+                            payload: root.order-id + "|" + root.amount;
+                        }
+
+                        Rectangle {
+                            width: 46px;
+                            height: 46px;
+                            border-radius: 12px;
+                            border-width: 2px;
+                            border-color: Ck.cyan;
+                            background: #0a0a18;
+
+                            Text {
+                                text: "CK";
+                                color: Ck.cyan;
+                                font-family: Ck.mono;
+                                font-size: 16px;
+                                font-weight: 700;
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
+                            }
+                        }
+                    }
+
+                    for c in 4: Rectangle {
+                        property <bool> right: c == 1 || c == 2;
+                        property <bool> bottom: c >= 2;
+                        x: self.right ? parent.width - self.width : 0px;
+                        y: self.bottom ? parent.height - self.height : 0px;
+                        width: 32px;
+                        height: 32px;
+
+                        Rectangle {
+                            x: 0;
+                            y: parent.bottom ? parent.height - self.height : 0px;
+                            width: parent.width;
+                            height: 3px;
+                            background: Ck.cyan;
+                        }
+
+                        Rectangle {
+                            x: parent.right ? parent.width - self.width : 0px;
+                            y: 0;
+                            width: 3px;
+                            height: parent.height;
+                            background: Ck.cyan;
+                        }
+                    }
+                }
+            }
+        }
+
+        // ── BUYURTMA KARTASI ────────────────────────────────────────────
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-top: 14px;
+
+            CkCardFlat {
+                interactive: false;
+
+                VerticalLayout {
+                    padding: 18px;
+                    spacing: 12px;
+
+                    HorizontalLayout {
+                        Text {
+                            text: "Buyurtma";
+                            color: Ck.text-dim;
+                            font-family: Ck.sans;
+                            font-size: 15px;
+                        }
+                        Rectangle { horizontal-stretch: 1; }
+                        Text {
+                            text: root.order-id;
+                            color: Ck.text;
+                            font-family: Ck.mono;
+                            font-size: 14px;
+                            font-weight: 600;
+                            overflow: elide;
+                        }
+                    }
+
+                    HorizontalLayout {
+                        Text {
+                            text: "To'lov summasi";
+                            color: Ck.text-dim;
+                            font-family: Ck.sans;
+                            font-size: 15px;
+                        }
+                        Rectangle { horizontal-stretch: 1; }
+                        Text {
+                            text: root.amount;
+                            color: Ck.cyan;
+                            font-family: Ck.mono;
+                            font-size: 17px;
+                            font-weight: 700;
+                            vertical-alignment: center;
+                        }
+                        VerticalLayout {
+                            alignment: center;
+                            CkCoin { size: 14px; }
+                        }
+                    }
+
+                    CkDivider { }
+
+                    HorizontalLayout {
+                        Text {
+                            text: "BLOCKCHAIN HASH";
+                            color: Ck.text-mute;
+                            font-family: Ck.mono;
+                            font-size: 11px;
+                            letter-spacing: 1.6px;
+                            vertical-alignment: center;
+                        }
+                        Rectangle { horizontal-stretch: 1; }
+                        Text {
+                            text: root.hash;
+                            color: Ck.cyan;
+                            font-family: Ck.mono;
+                            font-size: 13px;
+                        }
+                    }
+                }
+            }
+        }
+
+        // ── HOLAT ───────────────────────────────────────────────────────
+        HorizontalLayout {
+            padding-top: 16px;
+            alignment: center;
+            spacing: 8px;
+
+            VerticalLayout {
+                alignment: center;
+                Rectangle {
+                    width: 10px;
+                    height: 10px;
+                    border-radius: 5px;
+                    background: Ck.mint;
+                }
+            }
+
+            Text {
+                text: root.countdown;
+                color: Ck.text-dim;
+                font-family: Ck.mono;
+                font-size: 13px;
+                letter-spacing: 1.6px;
+                vertical-alignment: center;
+            }
+        }
+
+        // DEMO (backendsiz): to'lovni yakunlash.
+        Rectangle {
+            height: 60px;
+
+            TouchArea {
+                clicked => {
+                    root.paid();
+                }
+            }
+        }
+    }
+}

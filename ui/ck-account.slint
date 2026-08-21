@@ -1,0 +1,1032 @@
+// ═══════════════════════════════════════════════════════════════════════════
+// 27 — TRANZAKSIYA TARIXI, 28 — BUYURTMALARIM,
+// 29 — BUYURTMA YAKUNLANDI, 30 — SOZLAMALAR
+//
+// Kun va bo'lim sarlavhalari ro'yxatning o'ziga singdirilgan (`day` / `section`
+// maydoni bo'sh bo'lmasa sarlavha chiziladi). Sababi: Slint struct ichida
+// ichma-ich massiv bilan ishlash noqulay, bitta tekis ro'yxat esa bitta
+// repeater bilan chiziladi.
+// ═══════════════════════════════════════════════════════════════════════════
+
+import {
+    Ck, CkIcons,
+    CkIcon, CkIconSlot, CkAvatar, CkBadge, CkChip, CkCoin,
+    CkCard, CkCardFlat, CkImage, CkDivider,
+    CkPrimaryButton, CkSecondaryButton, CkTopBar, CkScroll, CkNavBar,
+} from "ck-common.slint";
+
+export struct CkTxRow {
+    // bo'sh bo'lmasa — ustidan kun sarlavhasi chiziladi
+    day: string,
+    icon: string,
+    tint: color,
+    title: string,
+    sub: string,
+    hash: string,
+    amount: string,
+    positive: bool,
+}
+
+export struct CkOrder {
+    id: string,
+    title: string,
+    price: string,
+    emoji: string,
+    date: string,
+    status: string,
+    status-tint: color,
+    action: string,
+    bga: color,
+    bgb: color,
+}
+
+export struct CkSetting {
+    // bo'sh bo'lmasa — ustidan bo'lim sarlavhasi chiziladi
+    section: string,
+    icon: string,
+    tint: color,
+    label: string,
+    value: string,
+    // 0 — o'tish, 1 — yoqilgan tugmacha, 2 — o'chirilgan tugmacha
+    kind: int,
+}
+
+// Yoqish/o'chirish tugmachasi.
+component CkToggle inherits Rectangle {
+    in-out property <bool> on;
+
+    width: 36px;
+    height: 20px;
+    border-radius: 10px;
+    border-width: 1px;
+    border-color: root.on ? Ck.cyan.transparentize(0.4) : Ck.line-strong;
+    background: root.on ? Ck.cyan.transparentize(0.6) : Ck.bg3;
+    animate background, border-color { duration: 180ms; easing: ease-out; }
+
+    TouchArea {
+        clicked => {
+            root.on = !root.on;
+        }
+    }
+
+    Rectangle {
+        x: root.on ? 17px : 1px;
+        y: 1px;
+        width: 16px;
+        height: 16px;
+        border-radius: 8px;
+        background: root.on ? Ck.cyan : Ck.text-mute;
+        animate x, background {
+            duration: 200ms;
+            easing: ease-out-quint;
+        }
+    }
+}
+
+// ── 27 TRANZAKSIYA TARIXI ──────────────────────────────────────────────────
+
+export component TxHistoryPage inherits Rectangle {
+    background: transparent;
+
+    in property <[string]> filters: ["HAMMASI", "+ KIRIM", "− CHIQIM", "MUKOFOT", "XARID", "TADBIR"];
+    in-out property <int> filter: 0;
+
+    in property <string> month-in: "+275";
+    in property <string> month-out: "-120";
+
+    in property <[CkTxRow]> rows: [
+        {
+            day: "10 IYUL", icon: CkIcons.shop, tint: #ffb547,
+            title: "Do'kondan xarid", sub: "10 iyl · 17:58",
+            hash: "0xf63...fb", amount: "-120", positive: false,
+        },
+        {
+            day: "", icon: CkIcons.game, tint: #ff2d95,
+            title: "Xotira o'yini", sub: "10 iyl · 17:58",
+            hash: "0x679...df", amount: "+20", positive: true,
+        },
+        {
+            day: "", icon: CkIcons.check-circle, tint: #00e5ff,
+            title: "So'rovnomani to'ldir", sub: "10 iyl · 17:58",
+            hash: "0x486...c2", amount: "+25", positive: true,
+        },
+        {
+            day: "", icon: CkIcons.check-circle, tint: #00e5ff,
+            title: "Ijtimoiy tarmoqda ulash", sub: "10 iyl · 17:58",
+            hash: "0xa33...45", amount: "+30", positive: true,
+        },
+        {
+            day: "", icon: CkIcons.check-circle, tint: #00e5ff,
+            title: "Cyber Quiz ga qo'shil", sub: "10 iyl · 17:58",
+            hash: "0x52e...31", amount: "+50", positive: true,
+        },
+        {
+            day: "", icon: CkIcons.ticket, tint: #00e5ff,
+            title: "Tadbirga kirish bonusi", sub: "10 iyl · 17:58",
+            hash: "0xf79...65", amount: "+100", positive: true,
+        },
+        {
+            day: "", icon: CkIcons.user, tint: #5bffc2,
+            title: "Ro'yxatdan o'tish bonusi", sub: "10 iyl · 17:58",
+            hash: "0x5bf...ae", amount: "+50", positive: true,
+        },
+    ];
+
+    callback back();
+
+    VerticalLayout {
+        padding-top: Ck.safe-top;
+        padding-bottom: Ck.safe-bottom;
+
+        CkNavBar {
+            vertical-stretch: 0;
+            eyebrow: "LEDGER · TRANZAKSIYALAR";
+            title: "Tarix";
+            back => {
+                root.back();
+            }
+        }
+
+        Rectangle {
+            vertical-stretch: 0;
+            height: 28px;
+
+            Flickable {
+                x: 20px;
+                width: parent.width - 40px;
+                height: 28px;
+                viewport-height: self.height;
+                viewport-width: chips.preferred-width;
+
+                chips := HorizontalLayout {
+                    height: 28px;
+                    spacing: 6px;
+
+                    for name[index] in root.filters: CkChip {
+                        text: name;
+                        active: root.filter == index;
+                        clicked => {
+                            root.filter = index;
+                        }
+                    }
+                }
+            }
+        }
+
+        Rectangle {
+            vertical-stretch: 1;
+
+            Flickable {
+                width: 100%;
+                height: 100%;
+                viewport-width: self.width;
+                viewport-height: body.preferred-height;
+
+                body := VerticalLayout {
+                    width: root.width;
+                    alignment: start;
+                    padding-top: 10px;
+                    padding-bottom: 30px;
+
+                    // ── oylik yakun ──
+                    HorizontalLayout {
+                        padding-left: 20px;
+                        padding-right: 20px;
+
+                        CkCardFlat {
+                            interactive: false;
+
+                            HorizontalLayout {
+                                padding: 12px;
+                                spacing: 12px;
+
+                                VerticalLayout {
+                                    horizontal-stretch: 1;
+                                    spacing: 2px;
+
+                                    Text {
+                                        text: "Jami kirim";
+                                        color: Ck.text-mute;
+                                        font-family: Ck.mono;
+                                        font-size: 9px;
+                                        letter-spacing: 1.3px;
+                                    }
+
+                                    HorizontalLayout {
+                                        spacing: 4px;
+                                        alignment: start;
+                                        Text {
+                                            text: root.month-in;
+                                            color: Ck.mint;
+                                            font-family: Ck.mono;
+                                            font-size: 18px;
+                                            font-weight: 700;
+                                            vertical-alignment: center;
+                                        }
+                                        VerticalLayout {
+                                            alignment: center;
+                                            CkCoin { size: 15px; }
+                                        }
+                                    }
+                                }
+
+                                Rectangle {
+                                    width: 1px;
+                                    background: Ck.line;
+                                }
+
+                                VerticalLayout {
+                                    horizontal-stretch: 1;
+                                    spacing: 2px;
+
+                                    Text {
+                                        text: "Jami chiqim";
+                                        color: Ck.text-mute;
+                                        font-family: Ck.mono;
+                                        font-size: 9px;
+                                        letter-spacing: 1.3px;
+                                    }
+
+                                    HorizontalLayout {
+                                        spacing: 4px;
+                                        alignment: start;
+                                        Text {
+                                            text: root.month-out;
+                                            color: Ck.amber;
+                                            font-family: Ck.mono;
+                                            font-size: 18px;
+                                            font-weight: 700;
+                                            vertical-alignment: center;
+                                        }
+                                        VerticalLayout {
+                                            alignment: center;
+                                            CkCoin { size: 15px; }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // ── kunlar bo'yicha ro'yxat ──
+                    for tx[index] in root.rows: VerticalLayout {
+                        padding-left: 20px;
+                        padding-right: 20px;
+                        padding-top: tx.day != "" ? 14px : 6px;
+                        spacing: 8px;
+
+                        if tx.day != "": Text {
+                            text: tx.day;
+                            color: Ck.cyan;
+                            font-family: Ck.mono;
+                            font-size: 10px;
+                            letter-spacing: 1.8px;
+                        }
+
+                        CkCardFlat {
+                            HorizontalLayout {
+                                padding: 12px;
+                                spacing: 12px;
+
+                                VerticalLayout {
+                                    alignment: center;
+
+                                    Rectangle {
+                                        width: 36px;
+                                        height: 36px;
+                                        border-radius: 11px;
+                                        background: tx.tint.transparentize(0.88);
+
+                                        CkIcon {
+                                            commands: tx.icon;
+                                            size: 18px;
+                                            tint: tx.tint;
+                                        }
+                                    }
+                                }
+
+                                VerticalLayout {
+                                    horizontal-stretch: 1;
+                                    alignment: center;
+                                    spacing: 2px;
+
+                                    Text {
+                                        text: tx.title;
+                                        color: Ck.text;
+                                        font-family: Ck.sans;
+                                        font-size: 13px;
+                                        font-weight: 500;
+                                        overflow: elide;
+                                    }
+
+                                    Text {
+                                        text: tx.sub;
+                                        color: Ck.text-mute;
+                                        font-family: Ck.mono;
+                                        font-size: 10px;
+                                        letter-spacing: 0.6px;
+                                        overflow: elide;
+                                    }
+
+                                    Text {
+                                        text: "↗ " + tx.hash;
+                                        color: Ck.cyan.transparentize(0.3);
+                                        font-family: Ck.mono;
+                                        font-size: 9px;
+                                        overflow: elide;
+                                    }
+                                }
+
+                                VerticalLayout {
+                                    alignment: center;
+
+                                    HorizontalLayout {
+                                        spacing: 4px;
+                                        alignment: end;
+                                        Text {
+                                            text: tx.amount;
+                                            color: tx.positive ? Ck.mint : Ck.amber;
+                                            font-family: Ck.mono;
+                                            font-size: 14px;
+                                            font-weight: 700;
+                                            vertical-alignment: center;
+                                        }
+                                        VerticalLayout {
+                                            alignment: center;
+                                            CkCoin { size: 13px; }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ── 28 BUYURTMALARIM ───────────────────────────────────────────────────────
+
+export component OrdersPage inherits Rectangle {
+    background: transparent;
+
+    in property <[string]> filters: ["HAMMASI", "KUTILMOQDA", "TAYYOR", "BEKOR"];
+    in-out property <int> filter: 0;
+
+    in property <[CkOrder]> orders: [
+        {
+            id: "#PIpaZWBFAeNcVd962ui1", title: "Stiker to'plami", price: "30", emoji: "",
+            date: "10.07.2026 · 17:58", status: "KUTILMOQDA · QR KO'RSATING",
+            status-tint: #ffb547, action: "QR ochish", bga: #2a2a5a, bgb: #14143a,
+        },
+        {
+            id: "#Z88D0Jv90spDJODqWbB5", title: "CK Futbolka", price: "120", emoji: "",
+            date: "10.07.2026 · 17:58", status: "TAYYOR · TOPSHIRILDI",
+            status-tint: #5bffc2, action: "", bga: #2a2a5a, bgb: #14143a,
+        },
+    ];
+
+    callback back();
+    callback order-clicked(index: int);
+    callback action-clicked(index: int);
+
+    VerticalLayout {
+        padding-top: Ck.safe-top;
+
+        CkNavBar {
+            vertical-stretch: 0;
+            eyebrow: "BUYURTMALAR";
+            title: "Mening buyurtmalarim";
+            back => {
+                root.back();
+            }
+        }
+
+        Rectangle {
+            vertical-stretch: 0;
+            height: 28px;
+
+            HorizontalLayout {
+                x: 20px;
+                width: parent.width - 40px;
+                height: 28px;
+                spacing: 6px;
+                alignment: start;
+
+                for name[index] in root.filters: CkChip {
+                    text: name;
+                    active: root.filter == index;
+                    clicked => {
+                        root.filter = index;
+                    }
+                }
+            }
+        }
+
+        Rectangle {
+            vertical-stretch: 1;
+
+            Flickable {
+                width: 100%;
+                height: parent.height - Ck.safe-bottom;
+                viewport-width: self.width;
+                viewport-height: list.preferred-height;
+
+                list := VerticalLayout {
+                    width: root.width;
+                    alignment: start;
+                    padding: 20px;
+                    padding-top: 10px;
+                    spacing: 10px;
+
+                    for order[index] in root.orders: CkCard {
+                        clicked => {
+                            root.order-clicked(index);
+                        }
+
+                        VerticalLayout {
+                            padding: 12px;
+                            spacing: 10px;
+
+                            HorizontalLayout {
+                                spacing: 12px;
+
+                                CkImage {
+                                    width: 68px;
+                                    height: 68px;
+                                    radius: 12px;
+                                    bga: order.bga;
+                                    bgb: order.bgb;
+
+                                    Text {
+                                        text: order.emoji;
+                                        font-size: 30px;
+                                        horizontal-alignment: center;
+                                        vertical-alignment: center;
+                                    }
+                                }
+
+                                VerticalLayout {
+                                    horizontal-stretch: 1;
+                                    alignment: center;
+                                    spacing: 2px;
+
+                                    Text {
+                                        text: "#" + order.id;
+                                        color: Ck.text-mute;
+                                        font-family: Ck.mono;
+                                        font-size: 10px;
+                                        letter-spacing: 0.8px;
+                                    }
+
+                                    Text {
+                                        text: order.title;
+                                        color: Ck.text;
+                                        font-family: Ck.sans;
+                                        font-size: 13px;
+                                        font-weight: 600;
+                                        overflow: elide;
+                                    }
+
+                                    Text {
+                                        text: order.date;
+                                        color: Ck.text-dim;
+                                        font-family: Ck.sans;
+                                        font-size: 12px;
+                                    }
+                                }
+
+                                VerticalLayout {
+                                    alignment: center;
+
+                                    HorizontalLayout {
+                                        spacing: 4px;
+                                        alignment: end;
+                                        Text {
+                                            text: order.price;
+                                            color: Ck.cyan;
+                                            font-family: Ck.mono;
+                                            font-size: 14px;
+                                            font-weight: 700;
+                                            vertical-alignment: center;
+                                        }
+                                        VerticalLayout {
+                                            alignment: center;
+                                            CkCoin { size: 13px; }
+                                        }
+                                    }
+                                }
+                            }
+
+                            CkDivider { }
+
+                            HorizontalLayout {
+                                spacing: 8px;
+
+                                Text {
+                                    text: "● " + order.status;
+                                    color: order.status-tint;
+                                    font-family: Ck.mono;
+                                    font-size: 9px;
+                                    letter-spacing: 1.2px;
+                                    vertical-alignment: center;
+                                    overflow: elide;
+                                }
+
+                                Rectangle {
+                                    horizontal-stretch: 1;
+                                }
+
+                                if order.action != "": CkPrimaryButton {
+                                    height: 28px;
+                                    text: order.action;
+                                    clicked => {
+                                        root.action-clicked(index);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ── 29 BUYURTMA YAKUNLANDI ─────────────────────────────────────────────────
+
+export component OrderSuccessPage inherits Rectangle {
+    background: transparent;
+
+    in property <string> message: "CK Gaming Headset sotuvchidan oldingiz. Yangi xarid uchun +10 ₵ mukofot oldingiz.";
+    in property <string> order-id: "#O-9F4A";
+    in property <string> paid: "850";
+    in property <string> block: "Verified · block #18244";
+
+    callback to-orders();
+    callback to-shop();
+
+    VerticalLayout {
+        padding-top: Ck.safe-top;
+        padding-bottom: Ck.safe-bottom;
+
+        VerticalLayout {
+            vertical-stretch: 1;
+            padding: 20px;
+            alignment: center;
+            spacing: 8px;
+
+            // ── belgisi ──
+            HorizontalLayout {
+                alignment: center;
+                padding-bottom: 18px;
+
+                Rectangle {
+                    width: 150px;
+                    height: 150px;
+
+                    // orqadagi nur
+                    Rectangle {
+                        width: 180px;
+                        height: 180px;
+                        background: @radial-gradient(circle, Ck.mint.transparentize(0.6) 0%, #00000000 70%);
+                    }
+
+                    // punktir halqa o'rnida yupqa halqa
+                    Rectangle {
+                        width: 142px;
+                        height: 142px;
+                        border-radius: 71px;
+                        border-width: 1px;
+                        border-color: Ck.mint.transparentize(0.6);
+                    }
+
+                    Rectangle {
+                        width: 110px;
+                        height: 110px;
+                        border-radius: 55px;
+                        background: @linear-gradient(135deg, #5bffc2, #00e5ff);
+                        drop-shadow-blur: 20px;
+                        drop-shadow-color: Ck.mint.transparentize(0.55);
+
+                        CkIcon {
+                            commands: CkIcons.check;
+                            size: 56px;
+                            tint: Ck.bg1;
+                        }
+                    }
+                }
+            }
+
+            Text {
+                text: "BUYURTMA YAKUNLANDI";
+                color: Ck.mint;
+                font-family: Ck.mono;
+                font-size: 10px;
+                letter-spacing: 1.8px;
+                horizontal-alignment: center;
+            }
+
+            Text {
+                text: "Rahmat!";
+                color: Ck.text;
+                font-family: Ck.sans;
+                font-size: 28px;
+                font-weight: 600;
+                horizontal-alignment: center;
+            }
+
+            Text {
+                text: root.message;
+                color: Ck.text-dim;
+                font-family: Ck.sans;
+                font-size: 14px;
+                horizontal-alignment: center;
+                wrap: word-wrap;
+            }
+
+            CkCardFlat {
+                interactive: false;
+
+                VerticalLayout {
+                    padding: 14px;
+                    spacing: 8px;
+
+                    HorizontalLayout {
+                        Text {
+                            text: "Order ID";
+                            color: Ck.text-dim;
+                            font-family: Ck.sans;
+                            font-size: 12px;
+                        }
+
+                        Rectangle {
+                            horizontal-stretch: 1;
+                        }
+
+                        Text {
+                            text: root.order-id;
+                            color: Ck.cyan;
+                            font-family: Ck.mono;
+                            font-size: 12px;
+                        }
+                    }
+
+                    HorizontalLayout {
+                        Text {
+                            text: "To'lov";
+                            color: Ck.text-dim;
+                            font-family: Ck.sans;
+                            font-size: 12px;
+                        }
+
+                        Rectangle {
+                            horizontal-stretch: 1;
+                        }
+
+                        Text {
+                            text: root.paid;
+                            color: Ck.text;
+                            font-family: Ck.mono;
+                            font-size: 12px;
+                            font-weight: 600;
+                            vertical-alignment: center;
+                        }
+                        VerticalLayout {
+                            alignment: center;
+                            CkCoin { size: 12px; }
+                        }
+                    }
+
+                    CkDivider { }
+
+                    HorizontalLayout {
+                        spacing: 4px;
+
+                        Text {
+                            text: "BLOCKCHAIN";
+                            color: Ck.text-mute;
+                            font-family: Ck.mono;
+                            font-size: 11px;
+                            letter-spacing: 1.2px;
+                            vertical-alignment: center;
+                        }
+
+                        Rectangle {
+                            horizontal-stretch: 1;
+                        }
+
+                        CkIconSlot {
+                            commands: CkIcons.shield;
+                            size: 12px;
+                            tint: Ck.mint;
+                        }
+
+                        Text {
+                            text: root.block;
+                            color: Ck.mint;
+                            font-family: Ck.sans;
+                            font-size: 11px;
+                            vertical-alignment: center;
+                        }
+                    }
+                }
+            }
+        }
+
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-bottom: 30px;
+            spacing: 10px;
+
+            CkSecondaryButton {
+                horizontal-stretch: 1;
+                text: "Buyurtmalar";
+                clicked => {
+                    root.to-orders();
+                }
+            }
+
+            CkPrimaryButton {
+                horizontal-stretch: 1;
+                text: "Do'konga qaytish";
+                icon: CkIcons.arrow-r;
+                clicked => {
+                    root.to-shop();
+                }
+            }
+        }
+    }
+}
+
+// ── 30 SOZLAMALAR ──────────────────────────────────────────────────────────
+
+export component SettingsPage inherits Rectangle {
+    background: transparent;
+
+    in property <string> user-name: "Aziz Karimov";
+    in property <string> user-initials: "AK";
+    in property <string> user-id: "ID B0SdbAj2DdKgXcBtfB38";
+
+    in property <[CkSetting]> items: [
+        { section: "KO'RINISH", icon: CkIcons.globe, tint: #00e5ff, label: "Til", value: "O'zbekcha", kind: 0 },
+        { section: "", icon: CkIcons.moon, tint: #7c4dff, label: "Mavzu", value: "Qorong'i", kind: 0 },
+        { section: "", icon: CkIcons.star, tint: #ff2d95, label: "Cyber intensivlik", value: "O'rta", kind: 0 },
+
+        { section: "XAVFSIZLIK", icon: CkIcons.shield, tint: #5bffc2, label: "Biometrik kirish", value: "", kind: 2 },
+
+        { section: "BILDIRISHNOMALAR", icon: CkIcons.bell, tint: #00e5ff, label: "Tadbir yangiliklari", value: "", kind: 1 },
+        { section: "", icon: CkIcons.wallet, tint: #00e5ff, label: "CyberAqcha tranzaksiyasi", value: "", kind: 1 },
+        { section: "", icon: CkIcons.send, tint: #00e5ff, label: "Marketing", value: "", kind: 2 },
+    ];
+
+    callback back();
+    callback item-clicked(index: int);
+
+    VerticalLayout {
+        padding-top: Ck.safe-top;
+
+        CkNavBar {
+            vertical-stretch: 0;
+            eyebrow: "SOZLAMALAR";
+            title: "Sozlamalar";
+            back => {
+                root.back();
+            }
+        }
+
+        Rectangle {
+            vertical-stretch: 1;
+
+            Flickable {
+                width: 100%;
+                height: parent.height - Ck.safe-bottom;
+                viewport-width: self.width;
+                viewport-height: body.preferred-height;
+
+                body := VerticalLayout {
+                    width: root.width;
+                    alignment: start;
+                    padding-bottom: 30px;
+
+                    // ── shaxs qatori ──
+                    HorizontalLayout {
+                        padding-left: 20px;
+                        padding-right: 20px;
+                        padding-top: 4px;
+                        padding-bottom: 14px;
+
+                        CkCardFlat {
+                            HorizontalLayout {
+                                padding: 12px;
+                                spacing: 10px;
+
+                                VerticalLayout {
+                                    alignment: center;
+                                    CkAvatar {
+                                        initials: root.user-initials;
+                                        size: 42px;
+                                    }
+                                }
+
+                                VerticalLayout {
+                                    horizontal-stretch: 1;
+                                    alignment: center;
+                                    spacing: 2px;
+
+                                    Text {
+                                        text: root.user-name;
+                                        color: Ck.text;
+                                        font-family: Ck.sans;
+                                        font-size: 13px;
+                                        font-weight: 600;
+                                    }
+
+                                    Text {
+                                        text: root.user-id;
+                                        color: Ck.text-mute;
+                                        font-family: Ck.mono;
+                                        font-size: 10px;
+                                        letter-spacing: 0.8px;
+                                    }
+                                }
+
+                                CkIconSlot {
+                                    commands: CkIcons.chev-r;
+                                    size: 16px;
+                                    tint: Ck.text-mute;
+                                }
+                            }
+                        }
+                    }
+
+                    // ── sozlamalar ──
+                    for item[index] in root.items: VerticalLayout {
+                        padding-left: 20px;
+                        padding-right: 20px;
+                        padding-top: item.section != "" ? 14px : 4px;
+                        spacing: 6px;
+
+                        if item.section != "": Text {
+                            text: item.section;
+                            color: Ck.cyan;
+                            font-family: Ck.mono;
+                            font-size: 10px;
+                            letter-spacing: 1.8px;
+                        }
+
+                        CkCardFlat {
+                            clicked => {
+                                root.item-clicked(index);
+                            }
+
+                            HorizontalLayout {
+                                padding: 12px;
+                                spacing: 12px;
+
+                                VerticalLayout {
+                                    alignment: center;
+
+                                    Rectangle {
+                                        width: 32px;
+                                        height: 32px;
+                                        border-radius: 9px;
+                                        background: item.tint.transparentize(0.88);
+
+                                        CkIcon {
+                                            commands: item.icon;
+                                            size: 16px;
+                                            tint: item.tint;
+                                        }
+                                    }
+                                }
+
+                                Text {
+                                    text: item.label;
+                                    color: Ck.text;
+                                    font-family: Ck.sans;
+                                    font-size: 13px;
+                                    font-weight: 500;
+                                    vertical-alignment: center;
+                                    overflow: elide;
+                                }
+
+                                Rectangle {
+                                    horizontal-stretch: 1;
+                                }
+
+                                if item.kind == 0 && item.value != "": Text {
+                                    text: item.value;
+                                    color: Ck.text-dim;
+                                    font-family: Ck.mono;
+                                    font-size: 11px;
+                                    vertical-alignment: center;
+                                }
+
+                                if item.kind == 0: CkIconSlot {
+                                    commands: CkIcons.chev-r;
+                                    size: 14px;
+                                    tint: Ck.text-mute;
+                                }
+
+                                if item.kind != 0: VerticalLayout {
+                                    alignment: center;
+                                    CkToggle {
+                                        // Boshlang'ich holat modeldan BIR MARTA olinadi (binding emas),
+                                        // shundan keyin foydalanuvchi erkin yoqib/o'chiradi.
+                                        init => {
+                                            self.on = item.kind == 1;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // ── MAXFIYLIK VA CHIQISH ────────────────────────────
+                    VerticalLayout {
+                        padding-left: 20px;
+                        padding-right: 20px;
+                        padding-top: 20px;
+                        spacing: 12px;
+
+                        Rectangle {
+                            height: 54px;
+                            border-radius: 16px;
+                            border-width: 1px;
+                            border-color: Ck.line-strong;
+                            background: pv.pressed ? Ck.bg3 : Ck.bg2;
+                            animate background { duration: 110ms; }
+
+                            pv := TouchArea { }
+
+                            HorizontalLayout {
+                                alignment: center;
+                                spacing: 10px;
+
+                                VerticalLayout {
+                                    alignment: center;
+                                    CkIcon {
+                                        commands: CkIcons.shield;
+                                        size: 17px;
+                                        tint: Ck.text;
+                                    }
+                                }
+
+                                Text {
+                                    text: "Maxfiylik siyosati";
+                                    color: Ck.text;
+                                    font-family: Ck.sans;
+                                    font-size: 15px;
+                                    font-weight: 600;
+                                    vertical-alignment: center;
+                                }
+                            }
+                        }
+
+                        Rectangle {
+                            height: 54px;
+                            border-radius: 16px;
+                            border-width: 1px;
+                            border-color: Ck.danger.transparentize(0.55);
+                            background: lo.pressed ? Ck.danger.transparentize(0.78) : Ck.danger.transparentize(0.88);
+                            animate background { duration: 110ms; }
+
+                            lo := TouchArea {
+                                clicked => {
+                                    // 8-band emas — bevosita chiqish signali
+                                    root.item-clicked(99);
+                                }
+                            }
+
+                            HorizontalLayout {
+                                alignment: center;
+                                spacing: 10px;
+
+                                VerticalLayout {
+                                    alignment: center;
+                                    CkIcon {
+                                        commands: CkIcons.logout;
+                                        size: 17px;
+                                        tint: Ck.danger;
+                                    }
+                                }
+
+                                Text {
+                                    text: "Hisobdan chiqish";
+                                    color: Ck.danger;
+                                    font-family: Ck.sans;
+                                    font-size: 15px;
+                                    font-weight: 600;
+                                    vertical-alignment: center;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

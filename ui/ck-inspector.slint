@@ -1,0 +1,789 @@
+// ═══════════════════════════════════════════════════════════════════════════
+// TEKSHIRUVCHI OQIMI — kod bilan kirish, dashboard, QR skaner, natija,
+// tasdiq/rad ekranlari, mehmonlar ro'yxati.
+//
+// Manba: StudioProjects/cyberkent/lib/features/inspector/*.
+// ═══════════════════════════════════════════════════════════════════════════
+
+import {
+    Ck, CkIcons,
+    CkIcon, CkIconSlot, CkIconButton, CkAvatar, CkBadge,
+    CkCard, CkCardFlat, CkHeroCard, CkStat,
+    CkPrimaryButton, CkSecondaryButton, CkDangerButton, CkGhostButton, CkField,
+    CkNavBar, CkScroll, CkScanFrame, CkListRow, CkDivider,
+} from "ck-common.slint";
+
+export struct CkVisitorRow {
+    name: string,
+    detail: string,
+    status: string,
+    status-tint: color,
+    initials: string,
+}
+
+// ── KIRISH (12 xonali kod) ──────────────────────────────────────────────────
+
+export component InspectorLoginPage inherits Rectangle {
+    background: transparent;
+
+    in-out property <string> code;
+    in property <bool> error: false;
+
+    callback back();
+    callback success();
+
+    VerticalLayout {
+        padding-top: Ck.safe-top;
+        padding-bottom: Ck.safe-bottom;
+
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-top: 16px;
+
+            CkIconButton {
+                icon: CkIcons.chev-l;
+                clicked => {
+                    root.back();
+                }
+            }
+
+            Rectangle {
+                horizontal-stretch: 1;
+            }
+        }
+
+        VerticalLayout {
+            vertical-stretch: 1;
+            padding: 20px;
+            padding-top: 12px;
+            spacing: 14px;
+            alignment: start;
+
+            HorizontalLayout {
+                alignment: center;
+                Rectangle {
+                    width: 88px;
+                    height: 88px;
+                    border-radius: 24px;
+                    background: @linear-gradient(135deg, Ck.purple, #9d7bff);
+                    drop-shadow-blur: 30px;
+                    drop-shadow-color: Ck.purple.transparentize(0.6);
+
+                    CkIcon {
+                        commands: CkIcons.shield;
+                        size: 44px;
+                        tint: Ck.bg1;
+                    }
+                }
+            }
+
+            VerticalLayout {
+                spacing: 6px;
+
+                Text {
+                    text: "TEKSHIRUVCHI · NAZORAT";
+                    color: Ck.purple;
+                    font-family: Ck.mono;
+                    font-size: 10px;
+                    letter-spacing: 1.8px;
+                    horizontal-alignment: center;
+                }
+
+                Text {
+                    text: "Nazorat kodi";
+                    color: Ck.text;
+                    font-family: Ck.sans;
+                    font-size: 26px;
+                    font-weight: 600;
+                    horizontal-alignment: center;
+                }
+
+                Text {
+                    text: "12 xonali maxsus kodni kiriting";
+                    color: Ck.text-dim;
+                    font-family: Ck.sans;
+                    font-size: 13px;
+                    horizontal-alignment: center;
+                }
+            }
+
+            CkField {
+                label: "NAZORAT KODI";
+                placeholder: "CK-INSP-XXXX";
+                text <=> root.code;
+                accepted => {
+                    root.success();
+                }
+            }
+
+            if root.error: Text {
+                text: "Kod noto'g'ri yoki muddati o'tgan";
+                color: Ck.danger;
+                font-family: Ck.sans;
+                font-size: 12px;
+                horizontal-alignment: center;
+            }
+
+            CkPrimaryButton {
+                text: "Kirish";
+                icon: CkIcons.arrow-r;
+                clicked => {
+                    root.success();
+                }
+            }
+        }
+    }
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────────────────
+
+export component InspectorHomePage inherits Rectangle {
+    background: transparent;
+
+    in property <bool> active: true;
+    in property <string> event-name: "Cyber Summit 2024";
+    in property <string> checked-in: "128";
+    in property <string> pending: "372";
+
+    callback scan();
+    callback visitors();
+    callback sign-out();
+
+    CkScroll {
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-top: 14px;
+            padding-bottom: 6px;
+            spacing: 12px;
+
+            VerticalLayout {
+                horizontal-stretch: 1;
+                alignment: center;
+                spacing: 2px;
+
+                Text {
+                    text: "TEKSHIRUVCHI PANELI";
+                    color: Ck.purple;
+                    font-family: Ck.mono;
+                    font-size: 10px;
+                    letter-spacing: 1.8px;
+                }
+
+                Text {
+                    text: root.event-name;
+                    color: Ck.text;
+                    font-family: Ck.sans;
+                    font-size: 22px;
+                    font-weight: 600;
+                    overflow: elide;
+                }
+            }
+
+            VerticalLayout {
+                alignment: center;
+                CkIconButton {
+                    icon: CkIcons.logout;
+                    tint: Ck.danger;
+                    clicked => {
+                        root.sign-out();
+                    }
+                }
+            }
+        }
+
+        // Statistika.
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-top: 8px;
+            spacing: 10px;
+
+            CkStat {
+                horizontal-stretch: 1;
+                label: "BUGUN KIRGAN";
+                value: root.checked-in;
+                tint: Ck.mint;
+            }
+
+            CkStat {
+                horizontal-stretch: 1;
+                label: "KUTILMOQDA";
+                value: root.pending;
+                tint: Ck.amber;
+            }
+        }
+
+        // Katta skaner tugmasi.
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-top: 14px;
+
+            CkHeroCard {
+                interactive: true;
+                clicked => {
+                    root.scan();
+                }
+
+                HorizontalLayout {
+                    padding: 18px;
+                    spacing: 14px;
+
+                    VerticalLayout {
+                        alignment: center;
+                        Rectangle {
+                            width: 56px;
+                            height: 56px;
+                            border-radius: 16px;
+                            background: @linear-gradient(135deg, Ck.cyan, Ck.purple);
+
+                            CkIcon {
+                                commands: CkIcons.scan;
+                                size: 30px;
+                                tint: Ck.bg1;
+                            }
+                        }
+                    }
+
+                    VerticalLayout {
+                        horizontal-stretch: 1;
+                        alignment: center;
+                        spacing: 3px;
+
+                        Text {
+                            text: "QR skanerlash";
+                            color: Ck.text;
+                            font-family: Ck.sans;
+                            font-size: 16px;
+                            font-weight: 700;
+                        }
+
+                        Text {
+                            text: "Mehmon QR kodini o'qing va kirish bering";
+                            color: Ck.text-dim;
+                            font-family: Ck.sans;
+                            font-size: 12px;
+                            wrap: word-wrap;
+                        }
+                    }
+
+                    CkIconSlot {
+                        commands: CkIcons.chev-r;
+                        size: 18px;
+                        tint: Ck.cyan;
+                    }
+                }
+            }
+        }
+
+        // Mehmonlar ro'yxati tugmasi.
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-top: 12px;
+
+            CkListRow {
+                icon: CkIcons.users;
+                tint: Ck.cyan;
+                title: "Mehmonlar ro'yxati";
+                sub: "Kirgan va kutilayotgan tashrifchilar";
+                clicked => {
+                    root.visitors();
+                }
+            }
+        }
+    }
+}
+
+// ── SKANER ────────────────────────────────────────────────────────────────
+
+export component InspectorScanPage inherits Rectangle {
+    // Skaner o'z qora fonini ko'rsatadi (qobiq foni yashiriladi).
+    background: #06060f;
+
+    in property <bool> active: true;
+
+    callback back();
+    callback detected();
+
+    VerticalLayout {
+        padding-top: Ck.safe-top;
+        padding-bottom: Ck.safe-bottom;
+
+        HorizontalLayout {
+            padding-left: 16px;
+            padding-right: 16px;
+            padding-top: 14px;
+            spacing: 8px;
+
+            CkIconButton {
+                icon: CkIcons.chev-l;
+                clicked => {
+                    root.back();
+                }
+            }
+
+            VerticalLayout {
+                horizontal-stretch: 1;
+                alignment: center;
+                Text {
+                    text: "QR SKANER";
+                    color: #ffffff;
+                    font-family: Ck.mono;
+                    font-size: 12px;
+                    letter-spacing: 1.8px;
+                    horizontal-alignment: center;
+                }
+            }
+
+            Rectangle {
+                width: 36px;
+            }
+        }
+
+        VerticalLayout {
+            vertical-stretch: 1;
+            alignment: center;
+            spacing: 22px;
+
+            HorizontalLayout {
+                alignment: center;
+                CkScanFrame {
+                    size: 268px;
+                    tint: Ck.cyan;
+                    running: root.active;
+                }
+            }
+
+            Text {
+                text: "QR kodni ramka ichiga joylang";
+                color: #ffffffcc;
+                font-family: Ck.sans;
+                font-size: 14px;
+                horizontal-alignment: center;
+            }
+        }
+
+        // DEMO (kamerasiz): skanerlashni simulyatsiya qiladi.
+        VerticalLayout {
+            padding-left: 24px;
+            padding-right: 24px;
+            padding-bottom: 8px;
+
+            CkPrimaryButton {
+                text: "Skanerlandi (demo)";
+                icon: CkIcons.scan;
+                clicked => {
+                    root.detected();
+                }
+            }
+        }
+    }
+}
+
+// ── SKANER NATIJASI ─────────────────────────────────────────────────────────
+
+export component ScanResultPage inherits Rectangle {
+    background: transparent;
+
+    in property <string> name: "Aziz Bekmurodov";
+    in property <string> visitor-id: "CK-V-2026-7F4A";
+    in property <string> event-name: "Cyber Summit 2024";
+    in property <string> ticket: "VIP · A12";
+    in property <string> initials: "AB";
+
+    callback back();
+    callback approve();
+    callback reject();
+
+    VerticalLayout {
+        padding-top: Ck.safe-top;
+
+        CkNavBar {
+            vertical-stretch: 0;
+            eyebrow: "SKANER NATIJASI";
+            title: "Tashrif buyuruvchi";
+            back => {
+                root.back();
+            }
+        }
+
+        VerticalLayout {
+            vertical-stretch: 1;
+            padding: 20px;
+            spacing: 14px;
+            alignment: start;
+
+            CkCard {
+                clip: true;
+
+                VerticalLayout {
+                    padding: 20px;
+                    spacing: 16px;
+
+                    HorizontalLayout {
+                        alignment: center;
+                        CkAvatar {
+                            initials: root.initials;
+                            size: 72px;
+                        }
+                    }
+
+                    VerticalLayout {
+                        spacing: 4px;
+
+                        Text {
+                            text: root.name;
+                            color: Ck.text;
+                            font-family: Ck.sans;
+                            font-size: 20px;
+                            font-weight: 700;
+                            horizontal-alignment: center;
+                        }
+
+                        Text {
+                            text: root.visitor-id;
+                            color: Ck.cyan;
+                            font-family: Ck.mono;
+                            font-size: 12px;
+                            horizontal-alignment: center;
+                        }
+                    }
+
+                    HorizontalLayout {
+                        alignment: center;
+                        CkBadge {
+                            text: "QR TASDIQLANDI";
+                            tint: Ck.mint;
+                            dot: true;
+                        }
+                    }
+
+                    CkDivider { }
+
+                    HorizontalLayout {
+                        VerticalLayout {
+                            horizontal-stretch: 1;
+                            spacing: 2px;
+
+                            Text {
+                                text: "TADBIR";
+                                color: Ck.text-mute;
+                                font-family: Ck.mono;
+                                font-size: 10px;
+                                letter-spacing: 1.4px;
+                            }
+
+                            Text {
+                                text: root.event-name;
+                                color: Ck.text;
+                                font-family: Ck.sans;
+                                font-size: 13px;
+                                font-weight: 500;
+                            }
+                        }
+
+                        VerticalLayout {
+                            spacing: 2px;
+
+                            Text {
+                                text: "JOY";
+                                color: Ck.text-mute;
+                                font-family: Ck.mono;
+                                font-size: 10px;
+                                letter-spacing: 1.4px;
+                                horizontal-alignment: right;
+                            }
+
+                            Text {
+                                text: root.ticket;
+                                color: Ck.text;
+                                font-family: Ck.sans;
+                                font-size: 13px;
+                                font-weight: 500;
+                                horizontal-alignment: right;
+                            }
+                        }
+                    }
+                }
+            }
+
+            Rectangle {
+                vertical-stretch: 1;
+            }
+
+            CkPrimaryButton {
+                text: "Kirgizish · Tasdiqlash";
+                icon: CkIcons.check;
+                clicked => {
+                    root.approve();
+                }
+            }
+
+            CkDangerButton {
+                icon: CkIcons.close;
+                text: "Rad etish";
+                clicked => {
+                    root.reject();
+                }
+            }
+        }
+    }
+}
+
+// ── TASDIQ / RAD EKRANLARI ──────────────────────────────────────────────────
+
+// Umumiy holat ekrani (tasdiq yoki rad).
+component CkStatusScreen inherits Rectangle {
+    background: transparent;
+
+    in property <bool> ok: true;
+    in property <string> eyebrow;
+    in property <string> title;
+    in property <string> message;
+    in property <string> button-text: "Keyingi";
+
+    callback done();
+
+    VerticalLayout {
+        padding-top: Ck.safe-top;
+        padding-bottom: Ck.safe-bottom;
+
+        VerticalLayout {
+            vertical-stretch: 1;
+            padding: 32px;
+            alignment: center;
+            spacing: 12px;
+
+            Text {
+                text: root.eyebrow;
+                color: root.ok ? Ck.mint : Ck.danger;
+                font-family: Ck.mono;
+                font-size: 10px;
+                letter-spacing: 1.8px;
+                horizontal-alignment: center;
+            }
+
+            HorizontalLayout {
+                alignment: center;
+                padding-top: 8px;
+                padding-bottom: 8px;
+
+                Rectangle {
+                    width: 150px;
+                    height: 150px;
+
+                    Rectangle {
+                        width: 150px;
+                        height: 150px;
+                        border-radius: 75px;
+                        background: @radial-gradient(circle,
+                            (root.ok ? Ck.mint : Ck.danger).transparentize(0.55) 0%,
+                            #00000000 70%);
+                    }
+
+                    Rectangle {
+                        width: 112px;
+                        height: 112px;
+                        border-radius: 56px;
+                        background: root.ok
+                            ? @linear-gradient(135deg, #5bffc2, #00e5ff)
+                            : @linear-gradient(135deg, #ff5577, #ff2d95);
+                        drop-shadow-blur: 36px;
+                        drop-shadow-color: (root.ok ? Ck.mint : Ck.danger).transparentize(0.5);
+
+                        CkIcon {
+                            commands: root.ok ? CkIcons.check : CkIcons.close;
+                            size: 56px;
+                            tint: Ck.bg1;
+                        }
+                    }
+                }
+            }
+
+            Text {
+                text: root.title;
+                color: root.ok ? Ck.mint : Ck.danger;
+                font-family: Ck.sans;
+                font-size: 26px;
+                font-weight: 700;
+                horizontal-alignment: center;
+            }
+
+            Text {
+                text: root.message;
+                color: Ck.text-dim;
+                font-family: Ck.sans;
+                font-size: 14px;
+                horizontal-alignment: center;
+                wrap: word-wrap;
+            }
+        }
+
+        VerticalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-bottom: 8px;
+
+            CkPrimaryButton {
+                text: root.button-text;
+                icon: CkIcons.arrow-r;
+                clicked => {
+                    root.done();
+                }
+            }
+        }
+    }
+}
+
+export component CheckInSuccessPage inherits Rectangle {
+    background: transparent;
+
+    in property <bool> active: true;
+    in property <string> name: "Aziz Bekmurodov";
+
+    callback done();
+
+    CkStatusScreen {
+        ok: true;
+        eyebrow: "KIRISH TASDIQLANDI";
+        title: "Kirish berildi";
+        message: root.name + " tadbirga muvaffaqiyatli kirdi. +10 ₵ mukofot berildi.";
+        button-text: "Keyingi mehmon";
+        done => {
+            root.done();
+        }
+    }
+}
+
+export component CheckInRejectedPage inherits Rectangle {
+    background: transparent;
+
+    in property <string> reason: "QR kod yaroqsiz yoki allaqachon ishlatilgan.";
+
+    callback done();
+
+    CkStatusScreen {
+        ok: false;
+        eyebrow: "KIRISH RAD ETILDI";
+        title: "Rad etildi";
+        message: root.reason;
+        button-text: "Keyingi mehmon";
+        done => {
+            root.done();
+        }
+    }
+}
+
+// ── MEHMONLAR RO'YXATI ──────────────────────────────────────────────────────
+
+export component VisitorsListPage inherits Rectangle {
+    background: transparent;
+
+    in property <[CkVisitorRow]> visitors: [
+        {
+            name: "Aziz Bekmurodov", detail: "CK-V-2026-7F4A · VIP",
+            status: "KIRGAN", status-tint: #5bffc2, initials: "AB",
+        },
+        {
+            name: "Nilufar Karimova", detail: "CK-V-2026-3B1C · Standard",
+            status: "KIRGAN", status-tint: #5bffc2, initials: "NK",
+        },
+        {
+            name: "Bobur Rasulov", detail: "CK-V-2026-9E2D · Standard",
+            status: "KUTILMOQDA", status-tint: #ffb547, initials: "BR",
+        },
+        {
+            name: "Dilnoza Yusupova", detail: "CK-V-2026-5A8F · VIP",
+            status: "KUTILMOQDA", status-tint: #ffb547, initials: "DY",
+        },
+    ];
+
+    callback back();
+
+    VerticalLayout {
+        padding-top: Ck.safe-top;
+
+        CkNavBar {
+            vertical-stretch: 0;
+            eyebrow: "NAZORAT";
+            title: "Mehmonlar";
+            back => {
+                root.back();
+            }
+        }
+
+        Rectangle {
+            vertical-stretch: 1;
+
+            Flickable {
+                width: 100%;
+                height: parent.height - Ck.safe-bottom;
+                viewport-width: self.width;
+                viewport-height: list.preferred-height;
+
+                list := VerticalLayout {
+                    width: root.width;
+                    alignment: start;
+                    padding-left: 20px;
+                    padding-right: 20px;
+                    padding-top: 6px;
+                    padding-bottom: 20px;
+                    spacing: 8px;
+
+                    for v in root.visitors: CkCardFlat {
+                        interactive: false;
+
+                        HorizontalLayout {
+                            padding: 12px;
+                            spacing: 12px;
+
+                            VerticalLayout {
+                                alignment: center;
+                                CkAvatar {
+                                    initials: v.initials;
+                                    size: 40px;
+                                }
+                            }
+
+                            VerticalLayout {
+                                horizontal-stretch: 1;
+                                alignment: center;
+                                spacing: 2px;
+
+                                Text {
+                                    text: v.name;
+                                    color: Ck.text;
+                                    font-family: Ck.sans;
+                                    font-size: 14px;
+                                    font-weight: 600;
+                                    overflow: elide;
+                                }
+
+                                Text {
+                                    text: v.detail;
+                                    color: Ck.text-mute;
+                                    font-family: Ck.mono;
+                                    font-size: 10px;
+                                    letter-spacing: 0.6px;
+                                    overflow: elide;
+                                }
+                            }
+
+                            VerticalLayout {
+                                alignment: center;
+                                CkBadge {
+                                    text: v.status;
+                                    tint: v.status-tint;
+                                    dot: true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

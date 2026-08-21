@@ -1,0 +1,1613 @@
+// ═══════════════════════════════════════════════════════════════════════════
+// TASHRIF BUYURUVCHI OQIMI — kirish landingi, rol tanlash, ro'yxatdan o'tish
+// (Google pochta orqali), kirish, xush kelibsiz, mehmon oynasi.
+//
+// Manba: StudioProjects/cyberkent/lib/features/visitor/* va role_selection/*.
+// Ro'yxatdan o'tish Google hisobi orqali (CkGoogleButton).
+// ═══════════════════════════════════════════════════════════════════════════
+
+import {
+    Ck, CkIcons, Auth,
+    CkIcon, CkIconSlot, CkIconButton, CkLogo, CkBadge,
+    CkCard, CkCardFlat, CkHeroCard, CkHoloCoin, CkCoin,
+    CkPrimaryButton, CkSecondaryButton, CkGhostButton, CkGoogleButton, CkField,
+    CkDivider,
+} from "ck-common.slint";
+
+// ── KIRISH LANDINGI ─────────────────────────────────────────────────────────
+
+export component VisitorEntryPage inherits Rectangle {
+    background: transparent;
+
+    callback guest();
+    callback register();
+    callback login();
+    callback show-roles();
+
+    VerticalLayout {
+        padding-top: Ck.safe-top;
+        padding-bottom: Ck.safe-bottom;
+
+        // O'ng-tepada rol tanlash tugmasi (sotuvchi / tekshiruvchi).
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-top: 14px;
+            padding-bottom: 6px;
+
+            Rectangle {
+                horizontal-stretch: 1;
+            }
+
+            CkIconButton {
+                icon: CkIcons.user;
+                clicked => {
+                    root.show-roles();
+                }
+            }
+        }
+
+        VerticalLayout {
+            vertical-stretch: 1;
+            padding-left: 20px;
+            padding-right: 20px;
+            alignment: center;
+            spacing: 12px;
+
+            HorizontalLayout {
+                alignment: center;
+                CkLogo {
+                    size: 72px;
+                }
+            }
+
+            Text {
+                text: "CYBERKENT";
+                color: #ffffff;
+                font-family: Ck.sans;
+                font-size: 26px;
+                font-weight: 700;
+                letter-spacing: 1px;
+                horizontal-alignment: center;
+            }
+
+            Text {
+                text: "Tadbir · Hamyon · Stream — bitta ilovada";
+                color: Ck.text-dim;
+                font-family: Ck.sans;
+                font-size: 13px;
+                horizontal-alignment: center;
+                wrap: word-wrap;
+            }
+
+            // Ro'yxatdan o'tishga undovchi bonus banner.
+            CkHeroCard {
+                interactive: true;
+                clicked => {
+                    root.register();
+                }
+
+                HorizontalLayout {
+                    padding: 16px;
+                    spacing: 12px;
+
+                    CkHoloCoin {
+                        size: 52px;
+                    }
+
+                    VerticalLayout {
+                        horizontal-stretch: 1;
+                        alignment: center;
+                        spacing: 3px;
+
+                        HorizontalLayout {
+                            spacing: 3px;
+                            alignment: center;
+                            Text {
+                                text: "Ro'yxatdan o'ting, +50";
+                                color: Ck.text;
+                                font-family: Ck.sans;
+                                font-size: 14px;
+                                font-weight: 600;
+                                vertical-alignment: center;
+                            }
+                            VerticalLayout {
+                                alignment: center;
+                                CkCoin { size: 13px; }
+                            }
+                            Text {
+                                text: "oling";
+                                color: Ck.text;
+                                font-family: Ck.sans;
+                                font-size: 14px;
+                                font-weight: 600;
+                                vertical-alignment: center;
+                            }
+                        }
+
+                        Text {
+                            text: "Google hisobingiz bilan bir zumda";
+                            color: Ck.text-dim;
+                            font-family: Ck.sans;
+                            font-size: 12px;
+                            overflow: elide;
+                        }
+                    }
+
+                    CkIconSlot {
+                        commands: CkIcons.chev-r;
+                        size: 16px;
+                        tint: Ck.cyan;
+                    }
+                }
+            }
+
+            // Mehmon sifatida kirish — asosiy tugma.
+            CkPrimaryButton {
+                text: "Mehmon sifatida kirish";
+                icon: CkIcons.arrow-r;
+                clicked => {
+                    root.guest();
+                }
+            }
+
+            CkSecondaryButton {
+                text: "Ro'yxatdan o'tish";
+                clicked => {
+                    root.register();
+                }
+            }
+
+            // Kirish havolasi.
+            HorizontalLayout {
+                alignment: center;
+                spacing: 6px;
+                padding-top: 4px;
+
+                Text {
+                    text: "Hisobingiz bormi?";
+                    color: Ck.text-dim;
+                    font-family: Ck.sans;
+                    font-size: 13px;
+                    vertical-alignment: center;
+                }
+
+                Rectangle {
+                    width: link.preferred-width;
+                    height: link.preferred-height;
+
+                    TouchArea {
+                        clicked => {
+                            root.login();
+                        }
+                    }
+
+                    link := Text {
+                        text: "Kirish";
+                        color: Ck.cyan;
+                        font-family: Ck.sans;
+                        font-size: 13px;
+                        font-weight: 600;
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ── ROL TANLASH ───────────────────────────────────────────────────────────
+
+component CkRoleCard inherits CkCard {
+    in property <string> icon;
+    in property <string> title;
+    in property <string> sub;
+    in property <color> tint-a;
+    in property <color> tint-b;
+
+    HorizontalLayout {
+        padding: 14px;
+        spacing: 14px;
+
+        VerticalLayout {
+            alignment: center;
+            Rectangle {
+                width: 54px;
+                height: 54px;
+                border-radius: 16px;
+                background: @linear-gradient(135deg, root.tint-a, root.tint-b);
+
+                CkIcon {
+                    commands: root.icon;
+                    size: 28px;
+                    tint: Ck.bg1;
+                }
+            }
+        }
+
+        VerticalLayout {
+            horizontal-stretch: 1;
+            alignment: center;
+            spacing: 4px;
+
+            Text {
+                text: root.title;
+                color: Ck.text;
+                font-family: Ck.sans;
+                font-size: 16px;
+                font-weight: 700;
+                overflow: elide;
+            }
+
+            Text {
+                text: root.sub;
+                color: Ck.text-dim;
+                font-family: Ck.sans;
+                font-size: 12px;
+                overflow: elide;
+                wrap: word-wrap;
+            }
+        }
+
+        CkIconSlot {
+            commands: CkIcons.chev-r;
+            size: 16px;
+            tint: Ck.text-mute;
+        }
+    }
+}
+
+export component RolePickerPage inherits Rectangle {
+    background: transparent;
+
+    callback close();
+    callback role-selected(index: int);
+
+    VerticalLayout {
+        padding-top: Ck.safe-top;
+        padding-bottom: Ck.safe-bottom;
+        padding-left: 24px;
+        padding-right: 24px;
+        alignment: center;
+        spacing: 16px;
+
+        HorizontalLayout {
+            padding-top: 4px;
+            CkIconButton {
+                icon: CkIcons.chev-l;
+                clicked => {
+                    root.close();
+                }
+            }
+            Rectangle {
+                horizontal-stretch: 1;
+            }
+        }
+
+        // Katta brend belgisi.
+        HorizontalLayout {
+            alignment: center;
+            Rectangle {
+                width: 104px;
+                height: 104px;
+                border-radius: 28px;
+                background: @linear-gradient(135deg, Ck.cyan, Ck.purple);
+                drop-shadow-blur: 40px;
+                drop-shadow-color: Ck.cyan.transparentize(0.55);
+                drop-shadow-offset-y: 10px;
+
+                CkIcon {
+                    commands: CkIcons.shield;
+                    size: 56px;
+                    tint: Ck.bg1;
+                }
+            }
+        }
+
+        VerticalLayout {
+            spacing: 6px;
+
+            Text {
+                text: "CYBERKENT";
+                color: #ffffff;
+                font-family: Ck.sans;
+                font-size: 30px;
+                font-weight: 700;
+                letter-spacing: 3px;
+                horizontal-alignment: center;
+            }
+
+            Text {
+                text: "QANDAY DAVOM ETAMIZ?";
+                color: Ck.cyan;
+                font-family: Ck.mono;
+                font-size: 10px;
+                letter-spacing: 1.8px;
+                horizontal-alignment: center;
+            }
+        }
+
+        CkRoleCard {
+            icon: CkIcons.qr;
+            title: "Tashrif buyuruvchi";
+            sub: "Tadbirlar, QR kirish, hamyon va do'kon";
+            tint-a: Ck.cyan;
+            tint-b: #0ea5e9;
+            clicked => {
+                root.role-selected(0);
+            }
+        }
+
+        CkRoleCard {
+            icon: CkIcons.shield;
+            title: "Tekshiruvchi";
+            sub: "QR skanerlab tadbirga kirish nazorati";
+            tint-a: Ck.purple;
+            tint-b: #9d7bff;
+            clicked => {
+                root.role-selected(1);
+            }
+        }
+
+        CkRoleCard {
+            icon: CkIcons.shop;
+            title: "Sotuvchi";
+            sub: "Buyurtma, sotuv, ombor va skaner";
+            tint-a: Ck.magenta;
+            tint-b: Ck.amber;
+            clicked => {
+                root.role-selected(2);
+            }
+        }
+
+        Text {
+            text: "Cyberkent · 2026";
+            color: Ck.text-mute;
+            font-family: Ck.mono;
+            font-size: 11px;
+            letter-spacing: 1.2px;
+            horizontal-alignment: center;
+        }
+    }
+}
+
+// ── RO'YXATDAN O'TISH (Google pochta orqali) ────────────────────────────────
+
+// Google hisob tanlash oynasidagi bitta hisob.
+export struct GoogleAccount {
+    name: string,
+    email: string,
+    initials: string,
+    tint: color,
+}
+
+// ── GOOGLE HISOB TANLASH VARAG'I ────────────────────────────────────────────
+// Ro'yxatdan o'tish ham, kirish ham shu varaqni ishlatadi (Google'ning o'z
+// oynasiga o'xshash: oq fon, hisob rowlari). Haqiqiy OAuth ulanganda hisoblar
+// ro'yxati Rust tomondan keladi.
+
+component GoogleChooserSheet inherits Rectangle {
+    in property <[GoogleAccount]> accounts;
+    in property <string> caption: "Google bilan davom etish";
+    in property <string> note: "CyberKent uchun hisobni tanlang";
+    // Qo'lda to'ldirish qatorining matni.
+    in property <string> manual-text: "Boshqa hisob (qo'lda to'ldirish)";
+
+    callback picked(email: string, name: string, initials: string, tint: color);
+    callback manual();
+    callback dismissed();
+
+    Rectangle {
+        background: #000000a6;
+        TouchArea {
+            clicked => {
+                root.dismissed();
+            }
+        }
+    }
+
+    Rectangle {
+        y: parent.height - self.height;
+        width: parent.width;
+        height: sheet.preferred-height + Ck.safe-bottom;
+        border-top-left-radius: Ck.r-lg;
+        border-top-right-radius: Ck.r-lg;
+        background: #ffffff;
+
+        // Varaq ichidagi bosishlar fonga o'tib ketmasin.
+        TouchArea { }
+
+        sheet := VerticalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-top: 12px;
+            padding-bottom: Ck.safe-bottom + 14px;
+            spacing: 6px;
+
+            HorizontalLayout {
+                alignment: center;
+                Rectangle {
+                    width: 40px;
+                    height: 4px;
+                    border-radius: 2px;
+                    background: #dadce0;
+                }
+            }
+
+            HorizontalLayout {
+                padding-top: 12px;
+                padding-bottom: 4px;
+                spacing: 10px;
+
+                VerticalLayout {
+                    alignment: center;
+                    Text {
+                        text: "G";
+                        color: #4285f4;
+                        font-family: Ck.sans;
+                        font-size: 24px;
+                        font-weight: 700;
+                    }
+                }
+
+                VerticalLayout {
+                    alignment: center;
+                    Text {
+                        text: root.caption;
+                        color: #202124;
+                        font-family: Ck.sans;
+                        font-size: 16px;
+                        font-weight: 600;
+                    }
+                }
+            }
+
+            Text {
+                text: root.note;
+                color: #5f6368;
+                font-family: Ck.sans;
+                font-size: 13px;
+                wrap: word-wrap;
+            }
+
+            Rectangle {
+                height: 8px;
+            }
+
+            for a in root.accounts: Rectangle {
+                height: 62px;
+                border-radius: 12px;
+                background: acc.pressed ? #f1f3f4 : #ffffff;
+                animate background { duration: 100ms; }
+
+                acc := TouchArea {
+                    clicked => {
+                        root.picked(a.email, a.name, a.initials, a.tint);
+                    }
+                }
+
+                HorizontalLayout {
+                    padding: 8px;
+                    spacing: 14px;
+
+                    VerticalLayout {
+                        alignment: center;
+                        Rectangle {
+                            width: 40px;
+                            height: 40px;
+                            border-radius: 20px;
+                            background: a.tint;
+                            Text {
+                                text: a.initials;
+                                color: #ffffff;
+                                font-family: Ck.sans;
+                                font-size: 18px;
+                                font-weight: 700;
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
+                            }
+                        }
+                    }
+
+                    VerticalLayout {
+                        horizontal-stretch: 1;
+                        alignment: center;
+                        spacing: 1px;
+                        Text {
+                            text: a.name;
+                            color: #202124;
+                            font-family: Ck.sans;
+                            font-size: 14px;
+                            font-weight: 600;
+                            overflow: elide;
+                        }
+                        Text {
+                            text: a.email;
+                            color: #5f6368;
+                            font-family: Ck.sans;
+                            font-size: 12px;
+                            overflow: elide;
+                        }
+                    }
+                }
+            }
+
+            Rectangle {
+                height: 58px;
+                border-radius: 12px;
+                background: addacc.pressed ? #f1f3f4 : #ffffff;
+                animate background { duration: 100ms; }
+
+                addacc := TouchArea {
+                    clicked => {
+                        root.manual();
+                    }
+                }
+
+                HorizontalLayout {
+                    padding: 8px;
+                    spacing: 14px;
+
+                    VerticalLayout {
+                        alignment: center;
+                        Rectangle {
+                            width: 40px;
+                            height: 40px;
+                            border-radius: 20px;
+                            border-width: 1px;
+                            border-color: #dadce0;
+                            background: #ffffff;
+                            CkIcon {
+                                commands: CkIcons.plus;
+                                size: 18px;
+                                tint: #5f6368;
+                            }
+                        }
+                    }
+
+                    VerticalLayout {
+                        horizontal-stretch: 1;
+                        alignment: center;
+                        Text {
+                            text: root.manual-text;
+                            color: #202124;
+                            font-family: Ck.sans;
+                            font-size: 14px;
+                            font-weight: 500;
+                        }
+                    }
+                }
+            }
+
+            Text {
+                text: "Davom etsangiz, Google ismingiz va e-pochtangizni CyberKent bilan ulashadi";
+                color: #5f6368;
+                font-family: Ck.sans;
+                font-size: 11px;
+                wrap: word-wrap;
+            }
+        }
+    }
+}
+
+// ── XATO XABARI ─────────────────────────────────────────────────────────────
+// Rust qaytargan xatoni ko'rsatadi (bo'sh bo'lsa umuman chizilmaydi).
+
+component CkErrorNote inherits Rectangle {
+    in property <string> text;
+
+    border-radius: 12px;
+    border-width: 1px;
+    border-color: Ck.danger.transparentize(0.55);
+    background: Ck.danger.transparentize(0.88);
+    height: row.preferred-height + 20px;
+
+    row := HorizontalLayout {
+        padding-left: 12px;
+        padding-right: 12px;
+        spacing: 10px;
+
+        VerticalLayout {
+            alignment: center;
+            CkIcon {
+                commands: CkIcons.alert;
+                size: 16px;
+                tint: Ck.danger;
+            }
+        }
+
+        Text {
+            text: root.text;
+            color: Ck.danger;
+            font-family: Ck.sans;
+            font-size: 12px;
+            wrap: word-wrap;
+            vertical-alignment: center;
+            horizontal-stretch: 1;
+        }
+    }
+}
+
+// ── RO'YXATDAN O'TISH ───────────────────────────────────────────────────────
+//
+// Ikki yo'l bitta sahifada:
+//
+//   Google  — hisob tanlanadi, e-pochta va ism o'zi to'ladi, PAROL SO'RALMAYDI
+//             (kirishni Google tasdiqlaydi). Faqat ish/o'qish joyi qoladi.
+//   Qo'lda  — e-pochta, ism-familiya, ish joyi, parol va parol tasdig'i.
+//
+// Tekshiruv Rust'da (`Auth` globali → src/auth.rs): tugma faqat forma haqiqatan
+// to'g'ri to'lganda yonadi, bosilganda esa hisob yaratiladi va xato bo'lsa
+// sahifada ko'rsatiladi. Ya'ni "Ro'yxatdan o'tish" endi shunchaki navigatsiya
+// emas — haqiqiy hisob ochadi (keyin shu parol bilan kirish mumkin).
+
+export component VisitorRegisterPage inherits Rectangle {
+    background: transparent;
+
+    // Forma maydonlari.
+    in-out property <string> email;
+    in-out property <string> full-name;
+    in-out property <string> workplace;
+    in-out property <string> password;
+    in-out property <string> password2;
+
+    callback back();
+    callback to-login();
+    // Hisob yaratildi (Rust tasdiqladi).
+    callback registered();
+
+    // Google hisobi ulanganmi va uning avatari.
+    property <bool> google: false;
+    property <string> g-initials;
+    property <color> g-tint: Ck.cyan;
+
+    // Google hisob tanlash varag'i ochiqmi.
+    property <bool> choosing: false;
+    property <bool> show-pw: false;
+    // Rust qaytargan xato.
+    property <string> error;
+
+    // Qurilmadagi Google hisoblar (haqiqiy OAuth ulanganda Rust to'ldiradi).
+    in property <[GoogleAccount]> accounts: [
+        { name: "Aziz Bekmurodov", email: "aziz.bekmurodov@gmail.com", initials: "A", tint: #00e5ff },
+        { name: "Malika Yusupova", email: "malika.y@gmail.com", initials: "M", tint: #ff2d95 },
+    ];
+
+    // ── Maydonlar holati (mantiq Rust'da) ──────────────────────────────────
+    property <bool> email-ok: Auth.email-ok(root.email);
+    property <bool> name-ok: Auth.name-ok(root.full-name);
+    property <bool> place-ok: root.workplace != "";
+    property <int> pw-score: Auth.password-score(root.password);
+    property <bool> pw-ok: root.pw-score >= 2;
+    property <bool> match-ok: root.password2 != "" && root.password2 == root.password;
+
+    // Google bilan kelgan hisobga parol kerak emas.
+    property <bool> can-submit: root.email-ok && root.name-ok && root.place-ok
+        && (root.google || (root.pw-ok && root.match-ok));
+
+    property <string> pw-label: root.pw-score <= 1
+        ? "Kuchsiz parol"
+        : (root.pw-score == 2 ? "O'rtacha" : (root.pw-score == 3 ? "Yaxshi" : "Juda kuchli"));
+    property <color> pw-color: root.pw-score <= 1
+        ? Ck.danger
+        : (root.pw-score == 2 ? Ck.amber : (root.pw-score == 3 ? Ck.mint : Ck.cyan));
+
+    function submit() {
+        root.error = Auth.register(root.email, root.full-name, root.workplace,
+            root.password, root.google);
+        if (root.error == "") {
+            root.registered();
+        }
+    }
+
+    VerticalLayout {
+        padding-top: Ck.safe-top;
+
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-top: 16px;
+            padding-bottom: 4px;
+
+            CkIconButton {
+                icon: CkIcons.chev-l;
+                clicked => {
+                    root.back();
+                }
+            }
+
+            Rectangle {
+                horizontal-stretch: 1;
+            }
+        }
+
+        Flickable {
+            vertical-stretch: 1;
+            viewport-width: self.width;
+            viewport-height: col.preferred-height;
+
+            col := VerticalLayout {
+                width: parent.width;
+                alignment: start;
+                padding-left: 24px;
+                padding-right: 24px;
+                padding-bottom: 28px;
+                spacing: 14px;
+
+                HorizontalLayout {
+                    alignment: center;
+                    CkLogo {
+                        size: 48px;
+                    }
+                }
+
+                VerticalLayout {
+                    spacing: 5px;
+
+                    Text {
+                        text: "YANGI CYBERID";
+                        color: Ck.cyan;
+                        font-family: Ck.mono;
+                        font-size: 10px;
+                        letter-spacing: 1.8px;
+                        horizontal-alignment: center;
+                    }
+
+                    Text {
+                        text: "Hisob yarating";
+                        color: Ck.text;
+                        font-family: Ck.sans;
+                        font-size: 26px;
+                        font-weight: 600;
+                        horizontal-alignment: center;
+                    }
+
+                    Text {
+                        text: root.google
+                            ? "Google hisobingiz ulandi — ma'lumotlarni tasdiqlang"
+                            : "Google bilan to'ldiring yoki qo'lda kiriting";
+                        color: Ck.text-dim;
+                        font-family: Ck.sans;
+                        font-size: 13px;
+                        horizontal-alignment: center;
+                        wrap: word-wrap;
+                    }
+                }
+
+                // ── GOOGLE ─────────────────────────────────────────────────
+                if !root.google: CkGoogleButton {
+                    text: "Google bilan davom etish";
+                    clicked => {
+                        root.choosing = true;
+                    }
+                }
+
+                if !root.google: HorizontalLayout {
+                    padding-top: 2px;
+                    padding-bottom: 2px;
+                    spacing: 12px;
+
+                    VerticalLayout {
+                        horizontal-stretch: 1;
+                        alignment: center;
+                        CkDivider { }
+                    }
+
+                    Text {
+                        text: "YOKI QO'LDA";
+                        color: Ck.text-mute;
+                        font-family: Ck.mono;
+                        font-size: 10px;
+                        letter-spacing: 1.6px;
+                        vertical-alignment: center;
+                    }
+
+                    VerticalLayout {
+                        horizontal-stretch: 1;
+                        alignment: center;
+                        CkDivider { }
+                    }
+                }
+
+                // Ulangan Google hisobi — e-pochta shu yerda, maydon emas.
+                if root.google: Rectangle {
+                    height: gcard.preferred-height + 24px;
+                    border-radius: Ck.r-md;
+                    border-width: 1px;
+                    border-color: Ck.mint.transparentize(0.6);
+                    background: Ck.mint.transparentize(0.9);
+
+                    gcard := HorizontalLayout {
+                        padding-left: 12px;
+                        padding-right: 12px;
+                        spacing: 12px;
+
+                        VerticalLayout {
+                            alignment: center;
+                            Rectangle {
+                                width: 42px;
+                                height: 42px;
+                                border-radius: 21px;
+                                background: root.g-tint;
+                                Text {
+                                    text: root.g-initials;
+                                    color: #ffffff;
+                                    font-family: Ck.sans;
+                                    font-size: 18px;
+                                    font-weight: 700;
+                                    horizontal-alignment: center;
+                                    vertical-alignment: center;
+                                }
+                            }
+                        }
+
+                        VerticalLayout {
+                            horizontal-stretch: 1;
+                            alignment: center;
+                            spacing: 2px;
+
+                            HorizontalLayout {
+                                spacing: 6px;
+                                CkIcon {
+                                    commands: CkIcons.check-circle;
+                                    size: 13px;
+                                    tint: Ck.mint;
+                                }
+                                Text {
+                                    text: "GOOGLE TASDIQLADI";
+                                    color: Ck.mint;
+                                    font-family: Ck.mono;
+                                    font-size: 9px;
+                                    letter-spacing: 1.4px;
+                                    vertical-alignment: center;
+                                }
+                            }
+
+                            Text {
+                                text: root.email;
+                                color: Ck.text;
+                                font-family: Ck.sans;
+                                font-size: 13px;
+                                font-weight: 600;
+                                overflow: elide;
+                            }
+                        }
+
+                        VerticalLayout {
+                            alignment: center;
+                            Rectangle {
+                                width: swap.preferred-width;
+                                height: swap.preferred-height;
+
+                                TouchArea {
+                                    clicked => {
+                                        root.choosing = true;
+                                    }
+                                }
+
+                                swap := Text {
+                                    text: "ALMASHTIRISH";
+                                    color: Ck.cyan;
+                                    font-family: Ck.mono;
+                                    font-size: 9px;
+                                    letter-spacing: 1.2px;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // ── MAYDONLAR ──────────────────────────────────────────────
+                if !root.google: CkField {
+                    label: "ELEKTRON POCHTA";
+                    placeholder: "siz@gmail.com";
+                    text <=> root.email;
+                    ok: root.email-ok;
+                    invalid: root.email != "" && !root.email-ok;
+                    hint: (root.email != "" && !root.email-ok)
+                        ? "To'g'ri e-pochta kiriting, masalan: siz@gmail.com"
+                        : "";
+                    edited => {
+                        root.error = "";
+                    }
+                }
+
+                CkField {
+                    label: "ISM FAMILIYA";
+                    placeholder: "Aziz Bekmurodov";
+                    text <=> root.full-name;
+                    ok: root.name-ok;
+                    invalid: root.full-name != "" && !root.name-ok;
+                    hint: (root.full-name != "" && !root.name-ok)
+                        ? "Ism va familiyani to'liq yozing"
+                        : "";
+                    edited => {
+                        root.error = "";
+                    }
+                }
+
+                CkField {
+                    label: "ISH YOKI O'QISH JOYI";
+                    placeholder: "TATU · Dasturchi";
+                    text <=> root.workplace;
+                    ok: root.place-ok;
+                    edited => {
+                        root.error = "";
+                    }
+                }
+
+                if !root.google: CkField {
+                    label: "PAROL";
+                    placeholder: "••••••••";
+                    password: !root.show-pw;
+                    action-text: root.show-pw ? "YASHIRISH" : "KO'RSATISH";
+                    text <=> root.password;
+                    ok: root.pw-ok;
+                    invalid: root.password != "" && !root.pw-ok;
+                    hint: root.password == ""
+                        ? "Kamida 8 belgi · harf va raqam"
+                        : root.pw-label;
+                    action => {
+                        root.show-pw = !root.show-pw;
+                    }
+                    edited => {
+                        root.error = "";
+                    }
+                }
+
+                // Parol kuchi — to'rt bo'lakli chizma.
+                if !root.google && root.password != "": HorizontalLayout {
+                    spacing: 5px;
+                    for i in 4: Rectangle {
+                        horizontal-stretch: 1;
+                        height: 4px;
+                        border-radius: 2px;
+                        background: root.pw-score > i ? root.pw-color : Ck.line;
+                        animate background { duration: 160ms; easing: ease-out; }
+                    }
+                }
+
+                if !root.google: CkField {
+                    label: "PAROLNI TASDIQLANG";
+                    placeholder: "••••••••";
+                    password: !root.show-pw;
+                    text <=> root.password2;
+                    ok: root.match-ok;
+                    invalid: root.password2 != "" && !root.match-ok;
+                    hint: (root.password2 != "" && !root.match-ok) ? "Parollar mos kelmadi" : "";
+                    accepted => {
+                        if (root.can-submit) {
+                            root.submit();
+                        }
+                    }
+                    edited => {
+                        root.error = "";
+                    }
+                }
+
+                // Google yo'li — parol o'rniga izoh.
+                if root.google: Rectangle {
+                    height: pwnote.preferred-height + 20px;
+                    border-radius: 12px;
+                    border-width: 1px;
+                    border-color: Ck.line;
+                    background: Ck.bg2;
+
+                    pwnote := HorizontalLayout {
+                        padding-left: 12px;
+                        padding-right: 12px;
+                        spacing: 10px;
+
+                        VerticalLayout {
+                            alignment: center;
+                            CkIcon {
+                                commands: CkIcons.lock;
+                                size: 15px;
+                                tint: Ck.cyan;
+                            }
+                        }
+
+                        Text {
+                            text: "Parol kerak emas — kirishni Google tasdiqlaydi";
+                            color: Ck.text-dim;
+                            font-family: Ck.sans;
+                            font-size: 12px;
+                            wrap: word-wrap;
+                            vertical-alignment: center;
+                            horizontal-stretch: 1;
+                        }
+                    }
+                }
+
+                if root.error != "": CkErrorNote {
+                    text: root.error;
+                }
+
+                HorizontalLayout {
+                    alignment: center;
+                    padding-top: 2px;
+                    CkBadge {
+                        text: "+50 BONUS";
+                        tint: Ck.mint;
+                        dot: true;
+                    }
+                    VerticalLayout {
+                        alignment: center;
+                        CkCoin { size: 13px; }
+                    }
+                }
+
+                CkPrimaryButton {
+                    text: "Ro'yxatdan o'tish";
+                    icon: CkIcons.arrow-r;
+                    enabled: root.can-submit;
+                    clicked => {
+                        root.submit();
+                    }
+                }
+
+                Text {
+                    text: "Ro'yxatdan o'tish bilan siz foydalanish shartlari va maxfiylik siyosatiga rozilik bildirasiz.";
+                    color: Ck.text-mute;
+                    font-family: Ck.sans;
+                    font-size: 11px;
+                    horizontal-alignment: center;
+                    wrap: word-wrap;
+                }
+
+                HorizontalLayout {
+                    alignment: center;
+                    spacing: 6px;
+                    padding-top: 2px;
+
+                    Text {
+                        text: "Hisobingiz bormi?";
+                        color: Ck.text-dim;
+                        font-family: Ck.sans;
+                        font-size: 13px;
+                        vertical-alignment: center;
+                    }
+
+                    Rectangle {
+                        width: tolink.preferred-width;
+                        height: tolink.preferred-height;
+
+                        TouchArea {
+                            clicked => {
+                                root.to-login();
+                            }
+                        }
+
+                        tolink := Text {
+                            text: "Kirish";
+                            color: Ck.cyan;
+                            font-family: Ck.sans;
+                            font-size: 13px;
+                            font-weight: 600;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Hisob tanlansa e-pochta va ism to'ladi, parol maydonlari yashiriladi.
+    if root.choosing: GoogleChooserSheet {
+        width: parent.width;
+        height: parent.height;
+        accounts: root.accounts;
+        caption: "Google bilan ro'yxatdan o'tish";
+        note: "CyberKent hisobini shu pochta bilan ochamiz";
+        picked(email, name, initials, tint) => {
+            root.email = email;
+            root.full-name = name;
+            root.g-initials = initials;
+            root.g-tint = tint;
+            root.google = true;
+            root.password = "";
+            root.password2 = "";
+            root.error = "";
+            root.choosing = false;
+        }
+        manual => {
+            // Qo'lda to'ldirishga qaytish — Google ulanishini bekor qiladi.
+            root.google = false;
+            root.email = "";
+            root.full-name = "";
+            root.error = "";
+            root.choosing = false;
+        }
+        dismissed => {
+            root.choosing = false;
+        }
+    }
+}
+
+// ── KIRISH ──────────────────────────────────────────────────────────────────
+//
+// Ro'yxatdan o'tgan hisob bilan ishlaydi: e-pochta + parol Rust tomonda
+// tekshiriladi (mos kelmasa xato ko'rinadi, sahifa o'tmaydi). Google bilan
+// ochilgan hisobga "Google bilan kirish" orqali kiriladi.
+
+export component VisitorLoginPage inherits Rectangle {
+    background: transparent;
+
+    in-out property <string> email;
+    in-out property <string> password;
+
+    callback back();
+    callback to-register();
+    callback logged-in();
+
+    property <bool> show-pw: false;
+    property <bool> choosing: false;
+    property <string> error;
+
+    in property <[GoogleAccount]> accounts: [
+        { name: "Aziz Bekmurodov", email: "aziz.bekmurodov@gmail.com", initials: "A", tint: #00e5ff },
+        { name: "Malika Yusupova", email: "malika.y@gmail.com", initials: "M", tint: #ff2d95 },
+    ];
+
+    property <bool> email-ok: Auth.email-ok(root.email);
+    property <bool> can-submit: root.email-ok && root.password != "";
+
+    function submit() {
+        root.error = Auth.login(root.email, root.password);
+        if (root.error == "") {
+            root.logged-in();
+        }
+    }
+
+    VerticalLayout {
+        padding-top: Ck.safe-top;
+        padding-bottom: Ck.safe-bottom;
+
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-top: 16px;
+            padding-bottom: 4px;
+
+            CkIconButton {
+                icon: CkIcons.chev-l;
+                clicked => {
+                    root.back();
+                }
+            }
+
+            Rectangle {
+                horizontal-stretch: 1;
+            }
+        }
+
+        VerticalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-top: 8px;
+            spacing: 6px;
+
+            HorizontalLayout {
+                alignment: start;
+                padding-bottom: 8px;
+                CkLogo {
+                    size: 36px;
+                }
+            }
+
+            Text {
+                text: "SECURE ACCESS";
+                color: Ck.cyan;
+                font-family: Ck.mono;
+                font-size: 10px;
+                letter-spacing: 1.8px;
+            }
+
+            Text {
+                text: "Kirish";
+                color: Ck.text;
+                font-family: Ck.sans;
+                font-size: 28px;
+                font-weight: 600;
+            }
+
+            Text {
+                text: "Ro'yxatdan o'tgan e-pochta va parolingiz bilan";
+                color: Ck.text-dim;
+                font-family: Ck.sans;
+                font-size: 12px;
+            }
+        }
+
+        VerticalLayout {
+            vertical-stretch: 1;
+            padding: 20px;
+            padding-top: 22px;
+            spacing: 14px;
+            alignment: start;
+
+            CkField {
+                label: "ELEKTRON POCHTA";
+                placeholder: "siz@gmail.com";
+                text <=> root.email;
+                ok: root.email-ok;
+                invalid: root.email != "" && !root.email-ok;
+                edited => {
+                    root.error = "";
+                }
+            }
+
+            CkField {
+                label: "PAROL";
+                placeholder: "••••••••";
+                password: !root.show-pw;
+                action-text: root.show-pw ? "YASHIRISH" : "KO'RSATISH";
+                text <=> root.password;
+                action => {
+                    root.show-pw = !root.show-pw;
+                }
+                accepted => {
+                    if (root.can-submit) {
+                        root.submit();
+                    }
+                }
+                edited => {
+                    root.error = "";
+                }
+            }
+
+            if root.error != "": CkErrorNote {
+                text: root.error;
+            }
+
+            CkPrimaryButton {
+                text: "Kirish";
+                icon: CkIcons.shield;
+                enabled: root.can-submit;
+                clicked => {
+                    root.submit();
+                }
+            }
+
+            HorizontalLayout {
+                padding-top: 4px;
+                padding-bottom: 4px;
+                spacing: 12px;
+
+                VerticalLayout {
+                    horizontal-stretch: 1;
+                    alignment: center;
+                    CkDivider { }
+                }
+
+                Text {
+                    text: "YOKI";
+                    color: Ck.text-mute;
+                    font-family: Ck.mono;
+                    font-size: 10px;
+                    letter-spacing: 1.6px;
+                    vertical-alignment: center;
+                }
+
+                VerticalLayout {
+                    horizontal-stretch: 1;
+                    alignment: center;
+                    CkDivider { }
+                }
+            }
+
+            CkGoogleButton {
+                text: "Google bilan kirish";
+                clicked => {
+                    root.choosing = true;
+                }
+            }
+        }
+
+        HorizontalLayout {
+            padding-bottom: 8px;
+            alignment: center;
+            spacing: 6px;
+
+            Text {
+                text: "Hisobingiz yo'qmi?";
+                color: Ck.text-dim;
+                font-family: Ck.sans;
+                font-size: 13px;
+                vertical-alignment: center;
+            }
+
+            Rectangle {
+                width: reg.preferred-width;
+                height: reg.preferred-height;
+
+                TouchArea {
+                    clicked => {
+                        root.to-register();
+                    }
+                }
+
+                reg := Text {
+                    text: "Ro'yxatdan o'tish";
+                    color: Ck.cyan;
+                    font-family: Ck.sans;
+                    font-size: 13px;
+                    font-weight: 600;
+                }
+            }
+        }
+    }
+
+    // Google bilan kirish: hisob ro'yxatdan o'tgan bo'lsa kiradi, aks holda
+    // xato ko'rsatadi — hisob o'zidan paydo bo'lib qolmaydi.
+    if root.choosing: GoogleChooserSheet {
+        width: parent.width;
+        height: parent.height;
+        accounts: root.accounts;
+        caption: "Google bilan kirish";
+        note: "CyberKent hisobingiz ulangan pochtani tanlang";
+        manual-text: "Parol bilan kirish";
+        picked(email, name, initials, tint) => {
+            root.choosing = false;
+            root.email = email;
+            root.error = Auth.google-login(email);
+            if (root.error == "") {
+                root.logged-in();
+            }
+        }
+        manual => {
+            root.choosing = false;
+        }
+        dismissed => {
+            root.choosing = false;
+        }
+    }
+}
+
+// ── XUSH KELIBSIZ (tasdiqdan keyin) ─────────────────────────────────────────
+
+export component WelcomePage inherits Rectangle {
+    background: transparent;
+
+    in property <bool> active: true;
+    // Bonus faqat yangi hisob ochilganda beriladi — kirishda emas.
+    in property <bool> bonus: true;
+
+    callback finished();
+
+    VerticalLayout {
+        padding-top: Ck.safe-top;
+        padding-bottom: Ck.safe-bottom;
+
+        VerticalLayout {
+            vertical-stretch: 1;
+            padding: 32px;
+            alignment: center;
+            spacing: 12px;
+
+            Text {
+                text: "KIRISH TASDIQLANDI";
+                color: Ck.mint;
+                font-family: Ck.mono;
+                font-size: 10px;
+                letter-spacing: 1.8px;
+                horizontal-alignment: center;
+            }
+
+            // Katta muvaffaqiyat belgisi.
+            HorizontalLayout {
+                alignment: center;
+                padding-top: 8px;
+                padding-bottom: 8px;
+
+                Rectangle {
+                    width: 168px;
+                    height: 168px;
+
+                    Rectangle {
+                        width: 168px;
+                        height: 168px;
+                        border-radius: 84px;
+                        background: @radial-gradient(circle, Ck.mint.transparentize(0.55) 0%, #00000000 70%);
+                    }
+
+                    Rectangle {
+                        width: 150px;
+                        height: 150px;
+                        border-radius: 75px;
+                        border-width: 1px;
+                        border-color: Ck.mint.transparentize(0.6);
+                    }
+
+                    Rectangle {
+                        width: 118px;
+                        height: 118px;
+                        border-radius: 59px;
+                        background: @linear-gradient(135deg, #5bffc2, #00e5ff);
+                        drop-shadow-blur: 40px;
+                        drop-shadow-color: Ck.mint.transparentize(0.5);
+
+                        CkIcon {
+                            commands: CkIcons.check;
+                            size: 60px;
+                            tint: Ck.bg1;
+                        }
+                    }
+                }
+            }
+
+            Text {
+                text: "Kirish tasdiqlandi";
+                color: Ck.mint;
+                font-family: Ck.sans;
+                font-size: 28px;
+                font-weight: 700;
+                horizontal-alignment: center;
+            }
+
+            Text {
+                // Ism Rust tomondan keladi (muvaffaqiyatli ro'yxat/kirishdan keyin).
+                text: Auth.account-first != ""
+                    ? "Cyberkentga xush kelibsiz, " + Auth.account-first + "! 🎉"
+                    : "Cyberkentga xush kelibsiz! 🎉";
+                color: Ck.text-dim;
+                font-family: Ck.sans;
+                font-size: 14px;
+                horizontal-alignment: center;
+                wrap: word-wrap;
+            }
+
+            // CYBERAQCHA ishorasi.
+            Rectangle {
+                height: 42px;
+                width: bonus.preferred-width + 32px;
+                border-radius: 21px;
+                border-width: 1px;
+                border-color: Ck.cyan.transparentize(0.7);
+                background: Ck.cyan.transparentize(0.9);
+
+                bonus := HorizontalLayout {
+                    padding-left: 16px;
+                    padding-right: 16px;
+                    spacing: 8px;
+
+                    VerticalLayout {
+                        alignment: center;
+                        CkCoin {
+                            size: 18px;
+                        }
+                    }
+
+                    Text {
+                        text: "Tadbir davomida CYBERAQCHA ishlab oling";
+                        color: Ck.cyan;
+                        font-family: Ck.sans;
+                        font-size: 13px;
+                        font-weight: 600;
+                        vertical-alignment: center;
+                    }
+                }
+            }
+        }
+
+        VerticalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-bottom: 8px;
+
+            CkPrimaryButton {
+                text: "Boshlash";
+                icon: CkIcons.arrow-r;
+                clicked => {
+                    root.finished();
+                }
+            }
+        }
+    }
+}
+
+// ── MEHMON UCHUN RO'YXAT OYNASI ─────────────────────────────────────────────
+// Eng ustki qatlam: qorong'i fon + pastdan chiquvchi varaq.
+
+export component GuestGateSheet inherits Rectangle {
+    in property <string> reason;
+
+    callback dismissed();
+    callback register();
+    callback login();
+
+    // Fonni qoraytirish + tashqariga bosilganda yopish.
+    Rectangle {
+        background: #000000a6;
+        TouchArea {
+            clicked => {
+                root.dismissed();
+            }
+        }
+    }
+
+    // Pastki varaq.
+    Rectangle {
+        y: parent.height - self.height;
+        width: parent.width;
+        height: sheet.preferred-height + Ck.safe-bottom;
+        border-top-left-radius: Ck.r-lg;
+        border-top-right-radius: Ck.r-lg;
+        border-width: 1px;
+        border-color: Ck.line-strong;
+        background: Ck.bg1;
+
+        // Varaq ustiga bosilsa yopilmasin.
+        TouchArea { }
+
+        sheet := VerticalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-top: 10px;
+            padding-bottom: Ck.safe-bottom + 20px;
+            spacing: 14px;
+
+            // tortish dastasi
+            HorizontalLayout {
+                alignment: center;
+                Rectangle {
+                    width: 40px;
+                    height: 4px;
+                    border-radius: 2px;
+                    background: Ck.line-strong;
+                }
+            }
+
+            HorizontalLayout {
+                alignment: center;
+                CkHoloCoin {
+                    size: 80px;
+                }
+            }
+
+            Text {
+                text: "Ro'yxatdan o'ting";
+                color: Ck.text;
+                font-family: Ck.sans;
+                font-size: 22px;
+                font-weight: 600;
+                horizontal-alignment: center;
+            }
+
+            Text {
+                text: root.reason;
+                color: Ck.text-dim;
+                font-family: Ck.sans;
+                font-size: 14px;
+                horizontal-alignment: center;
+                wrap: word-wrap;
+            }
+
+            HorizontalLayout {
+                alignment: center;
+                CkBadge {
+                    text: "+50 BONUS";
+                    tint: Ck.mint;
+                    dot: true;
+                }
+                VerticalLayout {
+                    alignment: center;
+                    CkCoin { size: 13px; }
+                }
+            }
+
+            CkPrimaryButton {
+                text: "Ro'yxatdan o'tish";
+                icon: CkIcons.arrow-r;
+                clicked => {
+                    root.register();
+                }
+            }
+
+            CkSecondaryButton {
+                text: "Kirish";
+                clicked => {
+                    root.login();
+                }
+            }
+        }
+    }
+}

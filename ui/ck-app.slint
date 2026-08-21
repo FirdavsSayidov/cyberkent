@@ -1,0 +1,1252 @@
+// ═══════════════════════════════════════════════════════════════════════════
+// CYBERKENT — QOBIQ (NavShell)
+//
+// Kompilyatsiya kirish nuqtasi. Butun ilova sof Slint: navigatsiya, holat,
+// animatsiya — hammasi shu yerda va sahifa fayllarida.
+//
+// Navigatsiya Flutter ilovasining `root_gate.dart`iga mos keladi va besh
+// qatlamdan iborat:
+//
+//   phase   — splash → onboarding → kirish landingi → rol oqimlari → ilova
+//   page    — tashrif buyuruvchi qobig'idagi 6 ta tab (faqat `phase == app`)
+//   overlay — tab ustidan ochiladigan ichki ekran (tafsilot, QR, sozlama…)
+//   insp    — tekshiruvchi rolining ichki ekrani
+//   sell    — sotuvchi rolining tabi va ichki ekrani
+//
+// Slint'da massivga element qo'shib bo'lmaydi, shuning uchun haqiqiy "orqaga"
+// tarixi yo'q. O'rniga `overlay-from` bitta qadamlik tarixni saqlaydi: tadbir
+// tafsilotidan yozilishga o'tilganda orqaga tafsilotga qaytadi, tabdan
+// ochilganda esa tabga.
+//
+// Tab sahifalari birinchi ochilgunicha yaratilmaydi (`seen-*`), keyin tirik
+// qoladi — shuning uchun skroll holati va kiritilgan matn saqlanadi.
+// ═══════════════════════════════════════════════════════════════════════════
+
+import { Ck, CkIcons, CkAction, CkBackdrop, CkTabBar, Auth, Store } from "ck-common.slint";
+// 3D xarita ko'prigi va auth mantig'i Rust'dan ko'rinishi uchun re-export.
+export { Map3D, Auth, CkDebug, CkMapLabel, Store } from "ck-common.slint";
+export { ShopFilter } from "ck-shop.slint";
+import { SplashPage, OnboardingPage } from "ck-auth.slint";
+import {
+    VisitorEntryPage, RolePickerPage, VisitorRegisterPage, VisitorLoginPage,
+    WelcomePage, GuestGateSheet,
+} from "ck-visitor.slint";
+import {
+    InspectorLoginPage, InspectorHomePage, InspectorScanPage, ScanResultPage,
+    CheckInSuccessPage, CheckInRejectedPage, VisitorsListPage,
+} from "ck-inspector.slint";
+import {
+    SellerLoginPage, SellerOrdersPage, SellerSalesPage, SellerStockPage,
+    SellerScannerPage, SellerCompletedPage,
+} from "ck-seller.slint";
+import { HomePage } from "ck-home.slint";
+import { EventsPage } from "ck-events.slint";
+import { WalletPage } from "ck-wallet.slint";
+import { ShopPage } from "ck-shop.slint";
+import { ProfilePage } from "ck-profile.slint";
+import { MapPage } from "ck-map.slint";
+import { EventDetailPage, EntryQrPage } from "ck-event.slint";
+import { StreamPage } from "ck-stream.slint";
+import { TasksPage } from "ck-tasks.slint";
+import { GamesPage, GamePlayPage } from "ck-games.slint";
+import { ProductDetailPage, PaymentQrPage } from "ck-product.slint";
+import { TxHistoryPage, OrdersPage, OrderSuccessPage, SettingsPage } from "ck-account.slint";
+import { SendPage, ReceivePage } from "ck-money.slint";
+import { EventRegisterPage, OrderDetailPage } from "ck-order.slint";
+import { NewsPage, NotificationsPage, SchedulePage } from "ck-news.slint";
+import { QuizPage, QuizTestsPage, QuizEditorPage, QuizScanPage, QuizResultPage } from "ck-quiz.slint";
+
+// Ilovaning eng tashqi holati.
+export enum CkPhase {
+    splash, onboarding,
+    // tashrif buyuruvchi kirish oqimi
+    entry, register, login, roles,
+    // ro'yxatdan o'tgan, lekin hali kirmagan tashrif buyuruvchi
+    welcome,
+    // asosiy qobiq (ro'yxatdan o'tgan yoki mehmon)
+    app,
+    // rol oqimlari
+    inspector-login, inspector,
+    seller-login, seller,
+}
+
+// Tab ustidan ochiladigan ichki ekranlar.
+export enum CkOverlay {
+    none,
+    // tadbir
+    event-detail, event-register, entry-qr, schedule,
+    // efir, topshiriq, o'yin
+    stream, tasks, games, game-play,
+    // do'kon
+    product, payment-qr, orders, order-detail, order-success,
+    // hamyon
+    tx-history, send, receive,
+    // profil
+    settings, news, notifications,
+    // cyberquiz
+    quiz, quiz-tests, quiz-editor, quiz-scan, quiz-result,
+}
+
+// Tekshiruvchi rolining ekrani.
+export enum CkInsp { home, scan, result, success, rejected, visitors }
+
+// Sotuvchi rolining ichki ekrani (tab emas).
+export enum CkSell { none, scanner, completed }
+
+export component CyberKentApp inherits Window {
+    title: "CyberKent";
+    preferred-width: 390px;
+    preferred-height: 844px;
+    min-width: 320px;
+    min-height: 560px;
+    background: Ck.bg0;
+
+    in-out property <CkPhase> phase: CkPhase.splash;
+    in-out property <int> page: 0;
+    in-out property <CkOverlay> overlay: CkOverlay.none;
+    in-out property <CkInsp> insp: CkInsp.home;
+    in-out property <int> sell-tab: 0;
+    in-out property <CkSell> sell: CkSell.none;
+
+    // Mehmon rejimi — ro'yxatdan o'tmasdan kirilgan. Ishtirok talab qiladigan
+    // bo'limlar (hamyon, QR, o'yin, xarid) ro'yxat oynasini ochadi.
+    in-out property <bool> guest: false;
+    // Ro'yxat oynasi ochiqmi va qaysi bo'lim uni chaqirdi.
+    property <string> gate-reason: "";
+
+    // Ichki ekran qaysi joydan ochilganini eslab qoladi, shunda "orqaga"
+    // to'g'ri joyga qaytadi (tadbir tafsiloti → yozilish → orqaga → tafsilot).
+    property <CkOverlay> overlay-from: CkOverlay.none;
+
+    // Xush kelibsiz sahifasi: yangi hisobmi (bonus bor) yoki qaytgan hisobmi.
+    property <bool> fresh-account: false;
+
+    // Qaysi tab sahifasi hech bo'lmaganda bir marta ochilgan.
+    property <bool> seen-events: false;
+    property <bool> seen-wallet: false;
+    // Xarid oqimida tanlangan mahsulot narxi (Store.buy uchun).
+    property <int> pending-price: 0;
+    property <bool> seen-shop: false;
+    property <bool> seen-profile: false;
+    property <bool> seen-map: false;
+
+    changed page => {
+        if (self.page == 1) {
+            self.seen-events = true;
+        }
+        if (self.page == 2) {
+            self.seen-wallet = true;
+        }
+        if (self.page == 3) {
+            self.seen-shop = true;
+        }
+        if (self.page == 4) {
+            self.seen-profile = true;
+        }
+        if (self.page == 5) {
+            self.seen-map = true;
+        }
+    }
+
+    // Ichki ekranni ochadi va qaytish nuqtasini eslab qoladi.
+    function open(o: CkOverlay) {
+        self.overlay-from = CkOverlay.none;
+        self.overlay = o;
+    }
+
+    // Ichki ekran ustidan yana bittasini ochadi (orqaga birinchisiga qaytadi).
+    function push(o: CkOverlay) {
+        self.overlay-from = self.overlay;
+        self.overlay = o;
+    }
+
+    // Orqaga: bir qadamlik tarix bo'lsa o'shanga, aks holda tabga.
+    function close-overlay() {
+        self.overlay = self.overlay-from;
+        self.overlay-from = CkOverlay.none;
+    }
+
+    // Mehmon uchun yopiq bo'lim. Ochilsa `true` qaytaradi — chaqiruvchi
+    // shundan keyin hech narsa qilmaydi.
+    function gated(reason: string) -> bool {
+        if (self.guest) {
+            self.gate-reason = reason;
+            return true;
+        }
+        return false;
+    }
+
+    // Kirish oqimining boshiga qaytadi (chiqish, mehmondan chiqish).
+    function to-entry() {
+        // Hisob ro'yxatda qoladi (Rust'da), lekin joriy sessiya tugaydi.
+        Auth.account-name = "";
+        Auth.account-first = "";
+        Auth.account-email = "";
+        Auth.account-workplace = "";
+        Auth.account-initials = "";
+        self.phase = CkPhase.entry;
+        self.page = 0;
+        self.overlay = CkOverlay.none;
+        self.overlay-from = CkOverlay.none;
+        self.guest = false;
+        self.gate-reason = "";
+        self.insp = CkInsp.home;
+        self.sell-tab = 0;
+        self.sell = CkSell.none;
+    }
+
+    // Splash o'zi o'tib ketadi — Rust tomondan hech narsa kerak emas.
+    Timer {
+        interval: 1800ms;
+        running: root.phase == CkPhase.splash;
+        triggered => {
+            root.phase = CkPhase.onboarding;
+        }
+    }
+
+    // ── FON ────────────────────────────────────────────────────────────────
+    // Jonli efir va skaner ekranlari o'z fonini ko'rsatadi, shuning uchun
+    // ularda o'chadi.
+    CkBackdrop {
+        width: 100%;
+        height: 100%;
+        visible: root.overlay != CkOverlay.stream
+            && root.overlay != CkOverlay.game-play
+            && root.insp != CkInsp.scan;
+    }
+
+    // ═══ KIRISH OQIMI ══════════════════════════════════════════════════════
+
+    if root.phase == CkPhase.splash: SplashPage {
+        width: root.width;
+        height: root.height;
+        // Silliq kirish: slaydli + so'nuvchi (Flutter route o'tishiga o'xshash).
+        property <bool> ck-in: false;
+        init => { self.ck-in = true; }
+        opacity: ck-in ? 1.0 : 0.0;
+        y: ck-in ? 0 : 16px;
+        animate opacity, y { duration: 260ms; easing: ease-out-quint; }
+    }
+
+    if root.phase == CkPhase.onboarding: OnboardingPage {
+        width: root.width;
+        height: root.height;
+        // Silliq kirish: slaydli + so'nuvchi (Flutter route o'tishiga o'xshash).
+        property <bool> ck-in: false;
+        init => { self.ck-in = true; }
+        opacity: ck-in ? 1.0 : 0.0;
+        y: ck-in ? 0 : 16px;
+        animate opacity, y { duration: 260ms; easing: ease-out-quint; }
+        skip => {
+            root.phase = CkPhase.entry;
+        }
+        finished => {
+            root.phase = CkPhase.entry;
+        }
+    }
+
+    // Kirish landingi — Flutter'dagi standart ekran.
+    if root.phase == CkPhase.entry: VisitorEntryPage {
+        width: root.width;
+        height: root.height;
+        // Silliq kirish: slaydli + so'nuvchi (Flutter route o'tishiga o'xshash).
+        property <bool> ck-in: false;
+        init => { self.ck-in = true; }
+        opacity: ck-in ? 1.0 : 0.0;
+        y: ck-in ? 0 : 16px;
+        animate opacity, y { duration: 260ms; easing: ease-out-quint; }
+        guest => {
+            root.guest = true;
+            root.phase = CkPhase.app;
+            root.page = 0;
+        }
+        register => {
+            root.phase = CkPhase.register;
+        }
+        login => {
+            root.phase = CkPhase.login;
+        }
+        show-roles => {
+            root.phase = CkPhase.roles;
+        }
+    }
+
+    if root.phase == CkPhase.roles: RolePickerPage {
+        width: root.width;
+        height: root.height;
+        // Silliq kirish: slaydli + so'nuvchi (Flutter route o'tishiga o'xshash).
+        property <bool> ck-in: false;
+        init => { self.ck-in = true; }
+        opacity: ck-in ? 1.0 : 0.0;
+        y: ck-in ? 0 : 16px;
+        animate opacity, y { duration: 260ms; easing: ease-out-quint; }
+        close => {
+            root.phase = CkPhase.entry;
+        }
+        role-selected(index) => {
+            if (index == 0) {
+                root.phase = CkPhase.entry;
+            }
+            if (index == 1) {
+                root.phase = CkPhase.inspector-login;
+            }
+            if (index == 2) {
+                root.phase = CkPhase.seller-login;
+            }
+        }
+    }
+
+    if root.phase == CkPhase.register: VisitorRegisterPage {
+        width: root.width;
+        height: root.height;
+        // Silliq kirish: slaydli + so'nuvchi (Flutter route o'tishiga o'xshash).
+        property <bool> ck-in: false;
+        init => { self.ck-in = true; }
+        opacity: ck-in ? 1.0 : 0.0;
+        y: ck-in ? 0 : 16px;
+        animate opacity, y { duration: 260ms; easing: ease-out-quint; }
+        back => {
+            root.phase = CkPhase.entry;
+        }
+        to-login => {
+            root.phase = CkPhase.login;
+        }
+        registered => {
+            root.guest = false;
+            root.fresh-account = true;
+            root.phase = CkPhase.welcome;
+        }
+    }
+
+    if root.phase == CkPhase.login: VisitorLoginPage {
+        width: root.width;
+        height: root.height;
+        // Silliq kirish: slaydli + so'nuvchi (Flutter route o'tishiga o'xshash).
+        property <bool> ck-in: false;
+        init => { self.ck-in = true; }
+        opacity: ck-in ? 1.0 : 0.0;
+        y: ck-in ? 0 : 16px;
+        animate opacity, y { duration: 260ms; easing: ease-out-quint; }
+        back => {
+            root.phase = CkPhase.entry;
+        }
+        to-register => {
+            root.phase = CkPhase.register;
+        }
+        logged-in => {
+            root.guest = false;
+            root.fresh-account = false;
+            root.phase = CkPhase.welcome;
+        }
+    }
+
+    if root.phase == CkPhase.welcome: WelcomePage {
+        width: root.width;
+        height: root.height;
+        // Silliq kirish: slaydli + so'nuvchi (Flutter route o'tishiga o'xshash).
+        property <bool> ck-in: false;
+        init => { self.ck-in = true; }
+        opacity: ck-in ? 1.0 : 0.0;
+        y: ck-in ? 0 : 16px;
+        animate opacity, y { duration: 260ms; easing: ease-out-quint; }
+        active: root.phase == CkPhase.welcome;
+        bonus: root.fresh-account;
+        finished => {
+            root.phase = CkPhase.app;
+            root.page = 0;
+        }
+    }
+
+    // ═══ TAB SAHIFALARI ════════════════════════════════════════════════════
+    //
+    // O'tish: sahifa o'z tartib raqamiga qarab chapda yoki o'ngda "turadi" —
+    // 2-tabdan 4-tabga o'tilganda 4-chi o'ngdan kirib keladi, 2-chi chapga
+    // chiqib ketadi. Yo'nalishni alohida saqlash shart emas.
+    //
+    // `shows-tabs` — ichki ekran ochilganda tab sahifasi butunlay yashiriladi.
+    // Aks holda ustma-ust ikki sahifaning matni ko'rinib qoladi va bosishlar
+    // pastdagi sahifaga o'tib ketadi.
+    //
+    // Diqqat: `if` ichidagi element repeater hisoblanadi va Slint unga foizli
+    // o'lchamni qo'llamaydi, shuning uchun o'lcham root'dan olinadi.
+
+    property <bool> shows-tabs: root.phase == CkPhase.app && root.overlay == CkOverlay.none;
+
+    if root.phase == CkPhase.app: HomePage {
+        width: root.width;
+        height: root.height;
+        // Kirgan foydalanuvchi (mehmon rejimida hisob yo'q).
+        user-name: Auth.account-name != "" ? Auth.account-name : "Mehmon";
+        user-initials: Auth.account-initials != "" ? Auth.account-initials : "M";
+        balance: Store.money(Store.balance);
+        balance-delta-pre: "+" + Store.money(Store.earned);
+        x: root.page == 0 ? 0px : -22px;
+        opacity: (root.shows-tabs && root.page == 0) ? 1.0 : 0.0;
+        visible: self.opacity > 0.01;
+        active: root.shows-tabs && root.page == 0;
+        animate x, opacity {
+            duration: 240ms;
+            easing: ease-out-quint;
+        }
+
+        qr-clicked => {
+            if (!root.gated("Kirish QR kodi faqat ro'yxatdan o'tgan tashrif buyuruvchilarga beriladi.")) {
+                root.open(CkOverlay.entry-qr);
+            }
+        }
+        shop-clicked => {
+            root.page = 3;
+        }
+        live-clicked => {
+            root.open(CkOverlay.stream);
+        }
+        live-all-clicked => {
+            root.open(CkOverlay.stream);
+        }
+        event-clicked(index) => {
+            root.open(CkOverlay.event-detail);
+        }
+        events-all-clicked => {
+            root.page = 1;
+        }
+        profile-clicked => {
+            root.page = 4;
+        }
+        notifications-clicked => {
+            root.open(CkOverlay.notifications);
+        }
+        action-clicked(index) => {
+            if (index == 0) {
+                root.page = 1;
+            }
+            if (index == 1) {
+                if (!root.gated("O'yinlarda qatnashish uchun ro'yxatdan o'ting.")) {
+                    root.open(CkOverlay.games);
+                }
+            }
+            if (index == 2) {
+                if (!root.gated("Topshiriqlarni bajarish uchun ro'yxatdan o'ting.")) {
+                    root.open(CkOverlay.tasks);
+                }
+            }
+            if (index == 3) {
+                root.open(CkOverlay.stream);
+            }
+        }
+    }
+
+    if root.phase == CkPhase.app && root.seen-events: EventsPage {
+        width: root.width;
+        height: root.height;
+        x: root.page == 1 ? 0px : (root.page < 1 ? 22px : -22px);
+        opacity: (root.shows-tabs && root.page == 1) ? 1.0 : 0.0;
+        visible: self.opacity > 0.01;
+        active: root.shows-tabs && root.page == 1;
+        animate x, opacity {
+            duration: 240ms;
+            easing: ease-out-quint;
+        }
+
+        event-clicked(index) => {
+            root.open(CkOverlay.event-detail);
+        }
+        register-clicked(index) => {
+            if (!root.gated("Tadbirga yozilish uchun ro'yxatdan o'ting.")) {
+                root.open(CkOverlay.event-register);
+            }
+        }
+        schedule-clicked => {
+            root.open(CkOverlay.schedule);
+        }
+        map-clicked(index) => {
+            root.page = 5;
+        }
+    }
+
+    if root.phase == CkPhase.app && root.seen-wallet: WalletPage {
+        width: root.width;
+        height: root.height;
+        balance: Store.money(Store.balance);
+        earned: "+" + Store.money(Store.earned);
+        spent: "-" + Store.money(Store.spent);
+        x: root.page == 2 ? 0px : (root.page < 2 ? 22px : -22px);
+        opacity: (root.shows-tabs && root.page == 2) ? 1.0 : 0.0;
+        visible: self.opacity > 0.01;
+        active: root.shows-tabs && root.page == 2;
+        animate x, opacity {
+            duration: 240ms;
+            easing: ease-out-quint;
+        }
+
+        more-clicked => {
+            root.open(CkOverlay.tx-history);
+        }
+        tx-clicked(index) => {
+            root.open(CkOverlay.tx-history);
+        }
+        receive-clicked => {
+            root.open(CkOverlay.receive);
+        }
+        send-clicked => {
+            root.open(CkOverlay.send);
+        }
+        stats-clicked => {
+            root.open(CkOverlay.tx-history);
+        }
+    }
+
+    if root.phase == CkPhase.app && root.seen-shop: ShopPage {
+        width: root.width;
+        height: root.height;
+        x: root.page == 3 ? 0px : (root.page < 3 ? 22px : -22px);
+        opacity: (root.shows-tabs && root.page == 3) ? 1.0 : 0.0;
+        visible: self.opacity > 0.01;
+        active: root.shows-tabs && root.page == 3;
+        animate x, opacity {
+            duration: 240ms;
+            easing: ease-out-quint;
+        }
+
+        deal-clicked => {
+            root.open(CkOverlay.product);
+        }
+        product-clicked(index) => {
+            root.open(CkOverlay.product);
+        }
+        orders-clicked => {
+            if (!root.gated("Buyurtmalar tarixi ro'yxatdan o'tgandan keyin ochiladi.")) {
+                root.open(CkOverlay.orders);
+            }
+        }
+    }
+
+    if root.phase == CkPhase.app && root.seen-profile: ProfilePage {
+        width: root.width;
+        height: root.height;
+        user-name: Auth.account-name != "" ? Auth.account-name : "Mehmon";
+        user-initials: Auth.account-initials != "" ? Auth.account-initials : "M";
+        user-email: Auth.account-email != "" ? Auth.account-email : "Mehmon rejimi";
+        user-place: Auth.account-workplace;
+        x: root.page == 4 ? 0px : (root.page < 4 ? 22px : -22px);
+        opacity: (root.shows-tabs && root.page == 4) ? 1.0 : 0.0;
+        visible: self.opacity > 0.01;
+        active: root.shows-tabs && root.page == 4;
+        animate x, opacity {
+            duration: 240ms;
+            easing: ease-out-quint;
+        }
+
+        settings-clicked => {
+            root.open(CkOverlay.settings);
+        }
+        logout-clicked => {
+            root.to-entry();
+        }
+
+        menu-clicked(index) => {
+            if (index == 0) {
+                if (!root.gated("Kirish QR olish uchun ro'yxatdan o'ting.")) {
+                    root.open(CkOverlay.entry-qr);
+                }
+            }
+            if (index == 1) {
+                if (!root.gated("Buyurtmalar tarixi ro'yxatdan o'tgandan keyin ochiladi.")) {
+                    root.open(CkOverlay.orders);
+                }
+            }
+            if (index == 2) {
+                root.open(CkOverlay.settings);
+            }
+        }
+    }
+
+    if root.phase == CkPhase.app && root.seen-map: MapPage {
+        width: root.width;
+        height: root.height;
+        x: root.page == 5 ? 0px : 22px;
+        opacity: (root.shows-tabs && root.page == 5) ? 1.0 : 0.0;
+        visible: self.opacity > 0.01;
+        active: root.shows-tabs && root.page == 5;
+        animate x, opacity {
+            duration: 240ms;
+            easing: ease-out-quint;
+        }
+    }
+
+    // ── CHET PARDALARI ─────────────────────────────────────────────────────
+    // Aylanayotgan kontent tepada va pastda keskin kesilib qolmasin.
+    // Rectangle input tutmaydi, shuning uchun bosishlarga xalaqit bermaydi.
+    if root.shows-tabs: Rectangle {
+        x: 0;
+        y: 0;
+        width: root.width;
+        height: Ck.safe-top + 10px;
+        background: @linear-gradient(180deg,
+            Ck.bg0 0%,
+            Ck.bg0.transparentize(0.35) 60%,
+            #00000000 100%);
+    }
+
+    if root.shows-tabs: Rectangle {
+        x: 0;
+        y: root.height - self.height;
+        width: root.width;
+        height: Ck.content-bottom + 24px;
+        background: @linear-gradient(180deg,
+            #00000000 0%,
+            Ck.bg0.transparentize(0.5) 40%,
+            Ck.bg0 100%);
+    }
+
+    // ── PASTKI PANEL ───────────────────────────────────────────────────────
+    // Ichki ekran ochilganda pastga surilib yo'qoladi.
+    if root.phase == CkPhase.app: CkTabBar {
+        x: 12px;
+        y: root.overlay == CkOverlay.none
+            ? root.height - self.height - 20px - Ck.safe-bottom
+            : root.height + 10px;
+        width: root.width - 24px;
+        opacity: root.overlay == CkOverlay.none ? 1.0 : 0.0;
+        current <=> root.page;
+        animate y, opacity {
+            duration: 260ms;
+            easing: ease-out-quint;
+        }
+    }
+
+    // ═══ ICHKI EKRANLAR ════════════════════════════════════════════════════
+    // Tab sahifalari ustini yopadi va tab paneli pastga surilib ketadi.
+
+    if root.overlay == CkOverlay.event-detail: EventDetailPage {
+        width: root.width;
+        height: root.height;
+        // Silliq kirish: slaydli + so'nuvchi (Flutter route o'tishiga o'xshash).
+        property <bool> ck-in: false;
+        init => { self.ck-in = true; }
+        opacity: ck-in ? 1.0 : 0.0;
+        y: ck-in ? 0 : 16px;
+        animate opacity, y { duration: 260ms; easing: ease-out-quint; }
+        back => {
+            root.close-overlay();
+        }
+        register => {
+            if (!root.gated("Tadbirga yozilish uchun ro'yxatdan o'ting.")) {
+                root.push(CkOverlay.event-register);
+            }
+        }
+    }
+
+    if root.overlay == CkOverlay.event-register: EventRegisterPage {
+        width: root.width;
+        height: root.height;
+        // Silliq kirish: slaydli + so'nuvchi (Flutter route o'tishiga o'xshash).
+        property <bool> ck-in: false;
+        init => { self.ck-in = true; }
+        opacity: ck-in ? 1.0 : 0.0;
+        y: ck-in ? 0 : 16px;
+        animate opacity, y { duration: 260ms; easing: ease-out-quint; }
+        back => {
+            root.close-overlay();
+        }
+        registered => {
+            root.overlay-from = CkOverlay.none;
+            root.overlay = CkOverlay.entry-qr;
+        }
+    }
+
+    if root.overlay == CkOverlay.entry-qr: EntryQrPage {
+        width: root.width;
+        height: root.height;
+        // Silliq kirish: slaydli + so'nuvchi (Flutter route o'tishiga o'xshash).
+        property <bool> ck-in: false;
+        init => { self.ck-in = true; }
+        opacity: ck-in ? 1.0 : 0.0;
+        y: ck-in ? 0 : 16px;
+        animate opacity, y { duration: 260ms; easing: ease-out-quint; }
+        back => {
+            root.close-overlay();
+        }
+    }
+
+    if root.overlay == CkOverlay.schedule: SchedulePage {
+        width: root.width;
+        height: root.height;
+        // Silliq kirish: slaydli + so'nuvchi (Flutter route o'tishiga o'xshash).
+        property <bool> ck-in: false;
+        init => { self.ck-in = true; }
+        opacity: ck-in ? 1.0 : 0.0;
+        y: ck-in ? 0 : 16px;
+        animate opacity, y { duration: 260ms; easing: ease-out-quint; }
+        back => {
+            root.close-overlay();
+        }
+    }
+
+    if root.overlay == CkOverlay.stream: StreamPage {
+        width: root.width;
+        height: root.height;
+        // Silliq kirish: slaydli + so'nuvchi (Flutter route o'tishiga o'xshash).
+        property <bool> ck-in: false;
+        init => { self.ck-in = true; }
+        opacity: ck-in ? 1.0 : 0.0;
+        y: ck-in ? 0 : 16px;
+        animate opacity, y { duration: 260ms; easing: ease-out-quint; }
+        active: root.overlay == CkOverlay.stream;
+        close => {
+            root.close-overlay();
+        }
+    }
+
+    if root.overlay == CkOverlay.tasks: TasksPage {
+        width: root.width;
+        height: root.height;
+        // Silliq kirish: slaydli + so'nuvchi (Flutter route o'tishiga o'xshash).
+        property <bool> ck-in: false;
+        init => { self.ck-in = true; }
+        opacity: ck-in ? 1.0 : 0.0;
+        y: ck-in ? 0 : 16px;
+        animate opacity, y { duration: 260ms; easing: ease-out-quint; }
+        back => {
+            root.close-overlay();
+        }
+        game-clicked(index) => {
+            root.push(CkOverlay.games);
+        }
+    }
+
+    if root.overlay == CkOverlay.games: GamesPage {
+        width: root.width;
+        height: root.height;
+        // Silliq kirish: slaydli + so'nuvchi (Flutter route o'tishiga o'xshash).
+        property <bool> ck-in: false;
+        init => { self.ck-in = true; }
+        opacity: ck-in ? 1.0 : 0.0;
+        y: ck-in ? 0 : 16px;
+        animate opacity, y { duration: 260ms; easing: ease-out-quint; }
+        back => {
+            root.close-overlay();
+        }
+        play(index) => {
+            root.push(CkOverlay.game-play);
+        }
+    }
+
+    if root.overlay == CkOverlay.game-play: GamePlayPage {
+        width: root.width;
+        height: root.height;
+        // Silliq kirish: slaydli + so'nuvchi (Flutter route o'tishiga o'xshash).
+        property <bool> ck-in: false;
+        init => { self.ck-in = true; }
+        opacity: ck-in ? 1.0 : 0.0;
+        y: ck-in ? 0 : 16px;
+        animate opacity, y { duration: 260ms; easing: ease-out-quint; }
+        active: root.overlay == CkOverlay.game-play;
+        back => {
+            root.close-overlay();
+        }
+    }
+
+    if root.overlay == CkOverlay.product: ProductDetailPage {
+        width: root.width;
+        height: root.height;
+        // Silliq kirish: slaydli + so'nuvchi (Flutter route o'tishiga o'xshash).
+        property <bool> ck-in: false;
+        init => { self.ck-in = true; }
+        opacity: ck-in ? 1.0 : 0.0;
+        y: ck-in ? 0 : 16px;
+        animate opacity, y { duration: 260ms; easing: ease-out-quint; }
+        back => {
+            root.close-overlay();
+        }
+        buy => {
+            if (!root.gated("Xarid qilish uchun ro'yxatdan o'ting.")) {
+                root.pending-price = self.price-value;
+                root.push(CkOverlay.payment-qr);
+            }
+        }
+    }
+
+    if root.overlay == CkOverlay.payment-qr: PaymentQrPage {
+        width: root.width;
+        height: root.height;
+        // Silliq kirish: slaydli + so'nuvchi (Flutter route o'tishiga o'xshash).
+        property <bool> ck-in: false;
+        init => { self.ck-in = true; }
+        opacity: ck-in ? 1.0 : 0.0;
+        y: ck-in ? 0 : 16px;
+        animate opacity, y { duration: 260ms; easing: ease-out-quint; }
+        back => {
+            root.close-overlay();
+        }
+        paid => {
+            // To'lov tasdiqlandi — CyberAqcha balansdan yechiladi.
+            Store.buy(root.pending-price);
+            root.overlay-from = CkOverlay.none;
+            root.overlay = CkOverlay.order-success;
+        }
+    }
+
+    if root.overlay == CkOverlay.orders: OrdersPage {
+        width: root.width;
+        height: root.height;
+        // Silliq kirish: slaydli + so'nuvchi (Flutter route o'tishiga o'xshash).
+        property <bool> ck-in: false;
+        init => { self.ck-in = true; }
+        opacity: ck-in ? 1.0 : 0.0;
+        y: ck-in ? 0 : 16px;
+        animate opacity, y { duration: 260ms; easing: ease-out-quint; }
+        back => {
+            root.close-overlay();
+        }
+        order-clicked(index) => {
+            root.push(CkOverlay.order-detail);
+        }
+        action-clicked(index) => {
+            root.push(CkOverlay.payment-qr);
+        }
+    }
+
+    if root.overlay == CkOverlay.order-detail: OrderDetailPage {
+        width: root.width;
+        height: root.height;
+        // Silliq kirish: slaydli + so'nuvchi (Flutter route o'tishiga o'xshash).
+        property <bool> ck-in: false;
+        init => { self.ck-in = true; }
+        opacity: ck-in ? 1.0 : 0.0;
+        y: ck-in ? 0 : 16px;
+        animate opacity, y { duration: 260ms; easing: ease-out-quint; }
+        back => {
+            root.close-overlay();
+        }
+    }
+
+    if root.overlay == CkOverlay.order-success: OrderSuccessPage {
+        width: root.width;
+        height: root.height;
+        // Silliq kirish: slaydli + so'nuvchi (Flutter route o'tishiga o'xshash).
+        property <bool> ck-in: false;
+        init => { self.ck-in = true; }
+        opacity: ck-in ? 1.0 : 0.0;
+        y: ck-in ? 0 : 16px;
+        animate opacity, y { duration: 260ms; easing: ease-out-quint; }
+        to-orders => {
+            root.overlay-from = CkOverlay.none;
+            root.overlay = CkOverlay.orders;
+        }
+        to-shop => {
+            root.overlay-from = CkOverlay.none;
+            root.overlay = CkOverlay.none;
+            root.page = 3;
+        }
+    }
+
+    if root.overlay == CkOverlay.tx-history: TxHistoryPage {
+        width: root.width;
+        height: root.height;
+        // Silliq kirish: slaydli + so'nuvchi (Flutter route o'tishiga o'xshash).
+        property <bool> ck-in: false;
+        init => { self.ck-in = true; }
+        opacity: ck-in ? 1.0 : 0.0;
+        y: ck-in ? 0 : 16px;
+        animate opacity, y { duration: 260ms; easing: ease-out-quint; }
+        back => {
+            root.close-overlay();
+        }
+    }
+
+    if root.overlay == CkOverlay.send: SendPage {
+        width: root.width;
+        height: root.height;
+        // Silliq kirish: slaydli + so'nuvchi (Flutter route o'tishiga o'xshash).
+        property <bool> ck-in: false;
+        init => { self.ck-in = true; }
+        opacity: ck-in ? 1.0 : 0.0;
+        y: ck-in ? 0 : 16px;
+        animate opacity, y { duration: 260ms; easing: ease-out-quint; }
+        back => {
+            root.close-overlay();
+        }
+        sent => {
+            root.close-overlay();
+        }
+    }
+
+    if root.overlay == CkOverlay.receive: ReceivePage {
+        width: root.width;
+        height: root.height;
+        // Silliq kirish: slaydli + so'nuvchi (Flutter route o'tishiga o'xshash).
+        property <bool> ck-in: false;
+        init => { self.ck-in = true; }
+        opacity: ck-in ? 1.0 : 0.0;
+        y: ck-in ? 0 : 16px;
+        animate opacity, y { duration: 260ms; easing: ease-out-quint; }
+        back => {
+            root.close-overlay();
+        }
+    }
+
+    if root.overlay == CkOverlay.settings: SettingsPage {
+        width: root.width;
+        height: root.height;
+        // Silliq kirish: slaydli + so'nuvchi (Flutter route o'tishiga o'xshash).
+        property <bool> ck-in: false;
+        init => { self.ck-in = true; }
+        opacity: ck-in ? 1.0 : 0.0;
+        y: ck-in ? 0 : 16px;
+        animate opacity, y { duration: 260ms; easing: ease-out-quint; }
+        back => {
+            root.close-overlay();
+        }
+        item-clicked(index) => {
+            // Til, mavzu va intensivlik sozlamalari qurilma xotirasini talab
+            // qiladi — bu sof UI portida ular o'z ekranida ko'rsatiladi.
+            if (index == 99) {
+                root.to-entry();
+            }
+        }
+    }
+
+    if root.overlay == CkOverlay.news: NewsPage {
+        width: root.width;
+        height: root.height;
+        // Silliq kirish: slaydli + so'nuvchi (Flutter route o'tishiga o'xshash).
+        property <bool> ck-in: false;
+        init => { self.ck-in = true; }
+        opacity: ck-in ? 1.0 : 0.0;
+        y: ck-in ? 0 : 16px;
+        animate opacity, y { duration: 260ms; easing: ease-out-quint; }
+        back => {
+            root.close-overlay();
+        }
+    }
+
+    if root.overlay == CkOverlay.notifications: NotificationsPage {
+        width: root.width;
+        height: root.height;
+        // Silliq kirish: slaydli + so'nuvchi (Flutter route o'tishiga o'xshash).
+        property <bool> ck-in: false;
+        init => { self.ck-in = true; }
+        opacity: ck-in ? 1.0 : 0.0;
+        y: ck-in ? 0 : 16px;
+        animate opacity, y { duration: 260ms; easing: ease-out-quint; }
+        back => {
+            root.close-overlay();
+        }
+    }
+
+    // ── CYBERQUIZ ──────────────────────────────────────────────────────────
+
+    if root.overlay == CkOverlay.quiz: QuizPage {
+        width: root.width;
+        height: root.height;
+        // Silliq kirish: slaydli + so'nuvchi (Flutter route o'tishiga o'xshash).
+        property <bool> ck-in: false;
+        init => { self.ck-in = true; }
+        opacity: ck-in ? 1.0 : 0.0;
+        y: ck-in ? 0 : 16px;
+        animate opacity, y { duration: 260ms; easing: ease-out-quint; }
+        back => {
+            root.close-overlay();
+        }
+        scan => {
+            root.push(CkOverlay.quiz-scan);
+        }
+        tests => {
+            root.push(CkOverlay.quiz-tests);
+        }
+    }
+
+    if root.overlay == CkOverlay.quiz-tests: QuizTestsPage {
+        width: root.width;
+        height: root.height;
+        // Silliq kirish: slaydli + so'nuvchi (Flutter route o'tishiga o'xshash).
+        property <bool> ck-in: false;
+        init => { self.ck-in = true; }
+        opacity: ck-in ? 1.0 : 0.0;
+        y: ck-in ? 0 : 16px;
+        animate opacity, y { duration: 260ms; easing: ease-out-quint; }
+        back => {
+            root.close-overlay();
+        }
+        create => {
+            root.push(CkOverlay.quiz-editor);
+        }
+        test-clicked(index) => {
+            root.push(CkOverlay.quiz-editor);
+        }
+    }
+
+    if root.overlay == CkOverlay.quiz-editor: QuizEditorPage {
+        width: root.width;
+        height: root.height;
+        // Silliq kirish: slaydli + so'nuvchi (Flutter route o'tishiga o'xshash).
+        property <bool> ck-in: false;
+        init => { self.ck-in = true; }
+        opacity: ck-in ? 1.0 : 0.0;
+        y: ck-in ? 0 : 16px;
+        animate opacity, y { duration: 260ms; easing: ease-out-quint; }
+        back => {
+            root.close-overlay();
+        }
+        saved => {
+            root.close-overlay();
+        }
+    }
+
+    if root.overlay == CkOverlay.quiz-scan: QuizScanPage {
+        width: root.width;
+        height: root.height;
+        // Silliq kirish: slaydli + so'nuvchi (Flutter route o'tishiga o'xshash).
+        property <bool> ck-in: false;
+        init => { self.ck-in = true; }
+        opacity: ck-in ? 1.0 : 0.0;
+        y: ck-in ? 0 : 16px;
+        animate opacity, y { duration: 260ms; easing: ease-out-quint; }
+        active: root.overlay == CkOverlay.quiz-scan;
+        back => {
+            root.close-overlay();
+        }
+        joined => {
+            root.overlay-from = CkOverlay.quiz;
+            root.overlay = CkOverlay.quiz-result;
+        }
+    }
+
+    if root.overlay == CkOverlay.quiz-result: QuizResultPage {
+        width: root.width;
+        height: root.height;
+        // Silliq kirish: slaydli + so'nuvchi (Flutter route o'tishiga o'xshash).
+        property <bool> ck-in: false;
+        init => { self.ck-in = true; }
+        opacity: ck-in ? 1.0 : 0.0;
+        y: ck-in ? 0 : 16px;
+        animate opacity, y { duration: 260ms; easing: ease-out-quint; }
+        done => {
+            root.close-overlay();
+        }
+    }
+
+    // ═══ TEKSHIRUVCHI ══════════════════════════════════════════════════════
+
+    if root.phase == CkPhase.inspector-login: InspectorLoginPage {
+        width: root.width;
+        height: root.height;
+        // Silliq kirish: slaydli + so'nuvchi (Flutter route o'tishiga o'xshash).
+        property <bool> ck-in: false;
+        init => { self.ck-in = true; }
+        opacity: ck-in ? 1.0 : 0.0;
+        y: ck-in ? 0 : 16px;
+        animate opacity, y { duration: 260ms; easing: ease-out-quint; }
+        back => {
+            root.phase = CkPhase.roles;
+        }
+        success => {
+            root.phase = CkPhase.inspector;
+            root.insp = CkInsp.home;
+        }
+    }
+
+    if root.phase == CkPhase.inspector: InspectorHomePage {
+        width: root.width;
+        height: root.height;
+        active: root.phase == CkPhase.inspector && root.insp == CkInsp.home;
+        visible: root.insp == CkInsp.home;
+        scan => {
+            root.insp = CkInsp.scan;
+        }
+        visitors => {
+            root.insp = CkInsp.visitors;
+        }
+        sign-out => {
+            root.to-entry();
+        }
+    }
+
+    if root.phase == CkPhase.inspector && root.insp == CkInsp.scan: InspectorScanPage {
+        width: root.width;
+        height: root.height;
+        active: root.insp == CkInsp.scan;
+        back => {
+            root.insp = CkInsp.home;
+        }
+        detected => {
+            root.insp = CkInsp.result;
+        }
+    }
+
+    if root.phase == CkPhase.inspector && root.insp == CkInsp.result: ScanResultPage {
+        width: root.width;
+        height: root.height;
+        back => {
+            root.insp = CkInsp.scan;
+        }
+        approve => {
+            root.insp = CkInsp.success;
+        }
+        reject => {
+            root.insp = CkInsp.rejected;
+        }
+    }
+
+    if root.phase == CkPhase.inspector && root.insp == CkInsp.success: CheckInSuccessPage {
+        width: root.width;
+        height: root.height;
+        active: root.insp == CkInsp.success;
+        done => {
+            root.insp = CkInsp.home;
+        }
+    }
+
+    if root.phase == CkPhase.inspector && root.insp == CkInsp.rejected: CheckInRejectedPage {
+        width: root.width;
+        height: root.height;
+        done => {
+            root.insp = CkInsp.home;
+        }
+    }
+
+    if root.phase == CkPhase.inspector && root.insp == CkInsp.visitors: VisitorsListPage {
+        width: root.width;
+        height: root.height;
+        back => {
+            root.insp = CkInsp.home;
+        }
+    }
+
+    // ═══ SOTUVCHI ══════════════════════════════════════════════════════════
+    //
+    // To'rt tab: BUYURTMALAR · SKANER · SOTUVLAR · QOLDIQ. Ikkinchisi sahifa
+    // emas — skanerni ochadi va yopilganda birinchi tabga qaytadi.
+
+    property <bool> sell-tabs: root.phase == CkPhase.seller && root.sell == CkSell.none;
+
+    if root.phase == CkPhase.seller-login: SellerLoginPage {
+        width: root.width;
+        height: root.height;
+        // Silliq kirish: slaydli + so'nuvchi (Flutter route o'tishiga o'xshash).
+        property <bool> ck-in: false;
+        init => { self.ck-in = true; }
+        opacity: ck-in ? 1.0 : 0.0;
+        y: ck-in ? 0 : 16px;
+        animate opacity, y { duration: 260ms; easing: ease-out-quint; }
+        back => {
+            root.phase = CkPhase.roles;
+        }
+        success => {
+            root.phase = CkPhase.seller;
+            root.sell-tab = 0;
+            root.sell = CkSell.none;
+        }
+    }
+
+    if root.phase == CkPhase.seller: SellerOrdersPage {
+        width: root.width;
+        height: root.height;
+        opacity: (root.sell-tabs && root.sell-tab == 0) ? 1.0 : 0.0;
+        visible: self.opacity > 0.01;
+        active: root.sell-tabs && root.sell-tab == 0;
+        animate opacity { duration: 200ms; easing: ease-out-quint; }
+
+        sign-out => {
+            root.to-entry();
+        }
+        order-clicked(index) => {
+            root.sell = CkSell.scanner;
+        }
+    }
+
+    if root.phase == CkPhase.seller: SellerSalesPage {
+        width: root.width;
+        height: root.height;
+        opacity: (root.sell-tabs && root.sell-tab == 2) ? 1.0 : 0.0;
+        visible: self.opacity > 0.01;
+        active: root.sell-tabs && root.sell-tab == 2;
+        animate opacity { duration: 200ms; easing: ease-out-quint; }
+    }
+
+    if root.phase == CkPhase.seller: SellerStockPage {
+        width: root.width;
+        height: root.height;
+        opacity: (root.sell-tabs && root.sell-tab == 3) ? 1.0 : 0.0;
+        visible: self.opacity > 0.01;
+        active: root.sell-tabs && root.sell-tab == 3;
+        animate opacity { duration: 200ms; easing: ease-out-quint; }
+    }
+
+    if root.phase == CkPhase.seller && root.sell == CkSell.scanner: SellerScannerPage {
+        width: root.width;
+        height: root.height;
+        active: root.sell == CkSell.scanner;
+        back => {
+            root.sell = CkSell.none;
+            root.sell-tab = 0;
+        }
+        confirmed => {
+            root.sell = CkSell.completed;
+        }
+    }
+
+    if root.phase == CkPhase.seller && root.sell == CkSell.completed: SellerCompletedPage {
+        width: root.width;
+        height: root.height;
+        active: root.sell == CkSell.completed;
+        done => {
+            root.sell = CkSell.none;
+            root.sell-tab = 0;
+        }
+    }
+
+    // Sotuvchi paneli. "SKANER" tabi sahifa almashtirmaydi — skanerni ochadi,
+    // shuning uchun tanlov birinchi tabda qoladi.
+    if root.phase == CkPhase.seller: CkTabBar {
+        x: 12px;
+        y: root.sell == CkSell.none
+            ? root.height - self.height - 20px - Ck.safe-bottom
+            : root.height + 10px;
+        width: root.width - 24px;
+        opacity: root.sell == CkSell.none ? 1.0 : 0.0;
+        current: root.sell-tab;
+        items: [
+            { icon: CkIcons.ticket, label: "BUYURTMALAR", tint: #00e5ff },
+            { icon: CkIcons.qr, label: "SKANER", tint: #00e5ff },
+            { icon: CkIcons.trend, label: "SOTUVLAR", tint: #00e5ff },
+            { icon: CkIcons.package, label: "QOLDIQ", tint: #00e5ff },
+        ];
+        animate y, opacity {
+            duration: 260ms;
+            easing: ease-out-quint;
+        }
+
+        changed current => {
+            if (self.current == 1) {
+                root.sell = CkSell.scanner;
+                // Tanlov skaner tabida qolib ketmasin.
+                self.current = root.sell-tab;
+            } else {
+                root.sell-tab = self.current;
+            }
+        }
+    }
+
+    // ═══ MEHMON UCHUN RO'YXAT OYNASI ═══════════════════════════════════════
+    // Eng ustki qatlam: ishtirok talab qiladigan bo'lim bosilganda chiqadi.
+
+    if root.gate-reason != "": GuestGateSheet {
+        width: root.width;
+        height: root.height;
+        reason: root.gate-reason;
+        dismissed => {
+            root.gate-reason = "";
+        }
+        register => {
+            root.gate-reason = "";
+            root.overlay = CkOverlay.none;
+            root.phase = CkPhase.register;
+        }
+        login => {
+            root.gate-reason = "";
+            root.overlay = CkOverlay.none;
+            root.phase = CkPhase.login;
+        }
+    }
+}

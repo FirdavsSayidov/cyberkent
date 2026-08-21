@@ -1,0 +1,323 @@
+// ═══════════════════════════════════════════════════════════════════════════
+// PROFIL — Flutter `user/profile_screen.dart` bilan 1:1.
+//
+// Tartib: TopBar (PROFIL / Profil + sozlama tugmasi) → shaxs kartasi (katta
+// avatar, ism, telefon/e-pochta, CYBER ROOKIE + TASDIQLANGAN badge, uch stat:
+// BALANS / TOPSHIRIQ / REYTING) → CYBERAQCHA BALANS qatori → "Hisob" menyusi
+// (Mening QR kodim / Mening buyurtmalarim / Sozlamalar) → "Hisobdan chiqish".
+// ═══════════════════════════════════════════════════════════════════════════
+
+import {
+    Ck, CkIcons,
+    CkIcon, CkIconSlot, CkIconButton, CkAvatar, CkBadge, CkCoin,
+    CkCard, CkCardFlat, CkDangerButton,
+    CkTopBar, CkSectionHead, CkScroll,
+} from "ck-common.slint";
+
+export struct CkProfileStat {
+    label: string,
+    value: string,
+}
+
+export struct CkMenuRow {
+    icon: string,
+    label: string,
+    sub: string,
+    tint: color,
+    badge: string,
+}
+
+export component ProfilePage inherits Rectangle {
+    // Qobiq ichida butun joyni egallaydi; fon qobiqda chiziladi.
+    background: transparent;
+
+    in property <string> user-name: "Aziz Karimov";
+    in property <string> user-initials: "AK";
+    in property <string> user-email: "+998 90 700 77 07";
+    // Ro'yxatdan o'tishda kiritilgan ish yoki o'qish joyi (bo'sh bo'lsa chizilmaydi).
+    in property <string> user-place;
+    in property <string> rank: "CYBER ROOKIE";
+    in property <string> version: "CYBERKENT v1.0";
+    in property <string> balance: "155";
+
+    // Sahifa ochiqmi — animatsiyalarni boshqarish uchun.
+    in property <bool> active: true;
+
+    in property <[CkProfileStat]> stats: [
+        { label: "BALANS", value: "155" },
+        { label: "TOPSHIRIQ", value: "3" },
+        { label: "REYTING", value: "#3" },
+    ];
+
+    in property <[CkMenuRow]> menu: [
+        { icon: CkIcons.qr, label: "Mening QR kodim", sub: "Kirish propuski", tint: #00e5ff, badge: "" },
+        { icon: CkIcons.package, label: "Mening buyurtmalarim", sub: "Xaridlar tarixi", tint: #ffb547, badge: "" },
+        { icon: CkIcons.settings, label: "Sozlamalar", sub: "Til, mavzu, bildirishnoma", tint: #8b8ec2, badge: "" },
+    ];
+
+    callback settings-clicked();
+    callback menu-clicked(index: int);
+    callback logout-clicked();
+
+    CkScroll {
+        CkTopBar {
+            eyebrow: "PROFIL";
+            title: "Profil";
+
+            CkIconButton {
+                icon: CkIcons.settings;
+                clicked => {
+                    root.settings-clicked();
+                }
+            }
+        }
+
+        // ── SHAXS KARTASI ───────────────────────────────────────────────
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+
+            CkCard {
+                interactive: false;
+
+                VerticalLayout {
+                    padding: 18px;
+                    spacing: 16px;
+
+                    HorizontalLayout {
+                        spacing: 16px;
+
+                        VerticalLayout {
+                            alignment: center;
+                            CkAvatar {
+                                size: 96px;
+                                initials: root.user-initials;
+                            }
+                        }
+
+                        VerticalLayout {
+                            horizontal-stretch: 1;
+                            alignment: center;
+                            spacing: 6px;
+
+                            Text {
+                                text: root.user-name;
+                                color: Ck.text;
+                                font-family: Ck.sans;
+                                font-size: 22px;
+                                font-weight: 700;
+                                overflow: elide;
+                            }
+
+                            Text {
+                                text: root.user-email;
+                                color: Ck.text-dim;
+                                font-family: Ck.mono;
+                                font-size: 14px;
+                                overflow: elide;
+                            }
+
+                            if root.user-place != "": Text {
+                                text: root.user-place;
+                                color: Ck.text-mute;
+                                font-family: Ck.sans;
+                                font-size: 12px;
+                                overflow: elide;
+                            }
+
+                            HorizontalLayout {
+                                padding-top: 4px;
+                                spacing: 8px;
+                                alignment: start;
+
+                                CkBadge {
+                                    text: root.rank;
+                                    tint: Ck.cyan;
+                                }
+
+                                CkBadge {
+                                    text: "TASDIQLANGAN";
+                                    tint: Ck.mint;
+                                    dot: true;
+                                }
+                            }
+                        }
+                    }
+
+                    // Uch stat.
+                    HorizontalLayout {
+                        for st in root.stats: VerticalLayout {
+                            horizontal-stretch: 1;
+                            spacing: 5px;
+
+                            Text {
+                                text: st.value;
+                                color: Ck.text;
+                                font-family: Ck.sans;
+                                font-size: 26px;
+                                font-weight: 700;
+                                horizontal-alignment: center;
+                            }
+
+                            Text {
+                                text: st.label;
+                                color: Ck.text-mute;
+                                font-family: Ck.mono;
+                                font-size: 10px;
+                                letter-spacing: 1.8px;
+                                horizontal-alignment: center;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // ── CYBERAQCHA BALANS ───────────────────────────────────────────
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-top: 14px;
+
+            CkCardFlat {
+                interactive: false;
+
+                HorizontalLayout {
+                    padding: 16px;
+                    spacing: 14px;
+
+                    VerticalLayout {
+                        alignment: center;
+                        CkCoin {
+                            size: 34px;
+                        }
+                    }
+
+                    Text {
+                        text: "CYBERAQCHA BALANS";
+                        color: Ck.text-dim;
+                        font-family: Ck.mono;
+                        font-size: 12px;
+                        letter-spacing: 2px;
+                        vertical-alignment: center;
+                        horizontal-stretch: 1;
+                    }
+
+                    HorizontalLayout {
+                        spacing: 5px;
+
+                        Text {
+                            text: root.balance;
+                            color: Ck.text;
+                            font-family: Ck.sans;
+                            font-size: 24px;
+                            font-weight: 700;
+                            vertical-alignment: center;
+                        }
+
+                        VerticalLayout {
+                            alignment: center;
+                            CkCoin {
+                                size: 22px;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // ── HISOB MENYUSI ───────────────────────────────────────────────
+        CkSectionHead {
+            title: "Hisob";
+        }
+
+        VerticalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            spacing: 12px;
+
+            for row[index] in root.menu: CkCardFlat {
+                clicked => {
+                    root.menu-clicked(index);
+                }
+
+                HorizontalLayout {
+                    padding: 16px;
+                    spacing: 14px;
+
+                    VerticalLayout {
+                        alignment: center;
+                        Rectangle {
+                            width: 44px;
+                            height: 44px;
+                            border-radius: 13px;
+                            background: row.tint.transparentize(0.86);
+                            CkIcon {
+                                commands: row.icon;
+                                size: 20px;
+                                tint: row.tint;
+                            }
+                        }
+                    }
+
+                    VerticalLayout {
+                        horizontal-stretch: 1;
+                        alignment: center;
+                        spacing: 3px;
+
+                        Text {
+                            text: row.label;
+                            color: Ck.text;
+                            font-family: Ck.sans;
+                            font-size: 15px;
+                            font-weight: 600;
+                            overflow: elide;
+                        }
+
+                        Text {
+                            text: row.sub;
+                            color: Ck.text-dim;
+                            font-family: Ck.sans;
+                            font-size: 13px;
+                            overflow: elide;
+                        }
+                    }
+
+                    VerticalLayout {
+                        alignment: center;
+                        CkIconSlot {
+                            commands: CkIcons.chev-r;
+                            size: 16px;
+                            tint: Ck.text-mute;
+                        }
+                    }
+                }
+            }
+        }
+
+        // ── CHIQISH ─────────────────────────────────────────────────────
+        VerticalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-top: 20px;
+            spacing: 14px;
+
+            CkDangerButton {
+                text: "Hisobdan chiqish";
+                icon: CkIcons.logout;
+                clicked => {
+                    root.logout-clicked();
+                }
+            }
+
+            Text {
+                text: root.version;
+                color: Ck.text-mute;
+                font-family: Ck.mono;
+                font-size: 11px;
+                letter-spacing: 2px;
+                horizontal-alignment: center;
+            }
+        }
+    }
+}

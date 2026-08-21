@@ -1,0 +1,127 @@
+import { Button, LineEdit, ListView, Palette } from "std-widgets.slint";
+import { TodoRow } from "todo-row.slint";
+
+// Bu struct Rust tomonida ham xuddi shu nom bilan paydo bo'ladi:
+// TodoItem { title: SharedString, done: bool }
+export struct TodoItem {
+    title: string,
+    done: bool,
+}
+
+export component AppWindow inherits Window {
+    title: "Slint Todo";
+    preferred-width: 460px;
+    preferred-height: 600px;
+    min-width: 340px;
+    min-height: 380px;
+    background: Palette.background;
+
+    // Rust → UI: ro'yxat va hisoblagich
+    in property <[TodoItem]> todos;
+    in property <int> remaining;
+
+    // UI → Rust: foydalanuvchi harakatlari
+    callback add-todo(title: string);
+    callback toggle-todo(index: int);
+    callback remove-todo(index: int);
+    callback clear-done();
+
+    // Enter va "Qo'shish" tugmasi bir xil ishni qiladi — takrorlamaslik uchun
+    // funksiyaga chiqarildi.
+    function submit() {
+        root.add-todo(input.text);
+        input.text = "";
+    }
+
+    VerticalLayout {
+        padding: 22px;
+        spacing: 16px;
+
+        // ── sarlavha ────────────────────────────────────────────────────
+        HorizontalLayout {
+            alignment: space-between;
+
+            Text {
+                text: "Vazifalar";
+                font-size: 26px;
+                font-weight: 700;
+                color: Palette.foreground;
+                vertical-alignment: center;
+            }
+
+            Text {
+                text: root.todos.length == 0
+                    ? ""
+                    : root.remaining == 0
+                        ? "hammasi bajarildi 🎉"
+                        : "\{root.remaining} / \{root.todos.length} qoldi";
+                font-size: 13px;
+                color: Palette.foreground.transparentize(0.45);
+                vertical-alignment: center;
+            }
+        }
+
+        // ── yangi vazifa kiritish ───────────────────────────────────────
+        HorizontalLayout {
+            spacing: 8px;
+
+            input := LineEdit {
+                placeholder-text: "Yangi vazifa…";
+                accepted => {
+                    root.submit();
+                }
+            }
+
+            Button {
+                text: "Qo'shish";
+                primary: true;
+                enabled: input.text != "";
+                clicked => {
+                    root.submit();
+                }
+            }
+        }
+
+        // ── ro'yxat ─────────────────────────────────────────────────────
+        Rectangle {
+            vertical-stretch: 1;
+
+            ListView {
+                width: 100%;
+                height: 100%;
+
+                for todo[index] in root.todos: TodoRow {
+                    title: todo.title;
+                    done: todo.done;
+                    toggled => {
+                        root.toggle-todo(index);
+                    }
+                    removed => {
+                        root.remove-todo(index);
+                    }
+                }
+            }
+
+            if root.todos.length == 0: Text {
+                text: "Ro'yxat bo'sh — yuqoridan vazifa qo'shing.";
+                font-size: 14px;
+                color: Palette.foreground.transparentize(0.6);
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
+        }
+
+        // ── pastki panel ────────────────────────────────────────────────
+        HorizontalLayout {
+            alignment: end;
+
+            Button {
+                text: "Bajarilganlarni tozalash";
+                enabled: root.remaining < root.todos.length;
+                clicked => {
+                    root.clear-done();
+                }
+            }
+        }
+    }
+}

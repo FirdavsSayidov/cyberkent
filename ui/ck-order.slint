@@ -1,0 +1,404 @@
+// ═══════════════════════════════════════════════════════════════════════════
+// TADBIRGA YOZILISH va BUYURTMA TAFSILOTI.
+//
+// Manba: StudioProjects/cyberkent/lib/features/events/event_register_screen.dart,
+//        shop/order_detail_screen.dart.
+// ═══════════════════════════════════════════════════════════════════════════
+
+import {
+    Ck, CkIcons,
+    CkIcon, CkIconSlot, CkBadge, CkCoin,
+    CkCard, CkCardFlat, CkHeroCard, CkImage, CkDivider, CkSegment,
+    CkPrimaryButton, CkGhostButton,
+    CkNavBar, CkScroll,
+} from "ck-common.slint";
+
+export struct CkOrderStep {
+    label: string,
+    time: string,
+    done: bool,
+}
+
+// ── TADBIRGA YOZILISH ───────────────────────────────────────────────────────
+
+export component EventRegisterPage inherits Rectangle {
+    background: transparent;
+
+    in property <string> title: "Cyber Summit 2024";
+    in property <string> when: "27 NOY · 19:00 — 23:00";
+    in property <string> place: "Innovation Hub";
+    in property <string> reward: "+50";
+
+    in property <[string]> ticket-types: ["STANDARD", "VIP", "PREMIUM"];
+    in-out property <int> ticket: 0;
+
+    callback back();
+    callback registered();
+
+    VerticalLayout {
+        padding-top: Ck.safe-top;
+
+        CkNavBar {
+            vertical-stretch: 0;
+            eyebrow: "YOZILISH";
+            title: "Tadbirga yozilish";
+            back => {
+                root.back();
+            }
+        }
+
+        Flickable {
+            vertical-stretch: 1;
+            viewport-width: self.width;
+            viewport-height: col.preferred-height;
+
+            col := VerticalLayout {
+                width: parent.width;
+                alignment: start;
+                padding-left: 20px;
+                padding-right: 20px;
+                padding-bottom: Ck.safe-bottom + 20px;
+                spacing: 14px;
+
+                CkHeroCard {
+                    VerticalLayout {
+                        padding: 16px;
+                        spacing: 10px;
+
+                        HorizontalLayout {
+                            alignment: start;
+                            CkBadge {
+                                text: "TADBIR";
+                                tint: Ck.cyan;
+                            }
+                        }
+
+                        Text {
+                            text: root.title;
+                            color: Ck.text;
+                            font-family: Ck.sans;
+                            font-size: 20px;
+                            font-weight: 700;
+                            wrap: word-wrap;
+                        }
+
+                        HorizontalLayout {
+                            spacing: 8px;
+                            CkIconSlot {
+                                commands: CkIcons.calendar;
+                                size: 15px;
+                                tint: Ck.text-dim;
+                            }
+                            Text {
+                                text: root.when;
+                                color: Ck.text-dim;
+                                font-family: Ck.sans;
+                                font-size: 12px;
+                                vertical-alignment: center;
+                            }
+                        }
+
+                        HorizontalLayout {
+                            spacing: 8px;
+                            CkIconSlot {
+                                commands: CkIcons.map-pin;
+                                size: 15px;
+                                tint: Ck.text-dim;
+                            }
+                            Text {
+                                text: root.place;
+                                color: Ck.text-dim;
+                                font-family: Ck.sans;
+                                font-size: 12px;
+                                vertical-alignment: center;
+                            }
+                        }
+                    }
+                }
+
+                Text {
+                    text: "BILET TURI";
+                    color: Ck.text-dim;
+                    font-family: Ck.mono;
+                    font-size: 10px;
+                    letter-spacing: 1.6px;
+                }
+
+                CkSegment {
+                    items: root.ticket-types;
+                    current <=> root.ticket;
+                }
+
+                // mukofot eslatmasi
+                CkCardFlat {
+                    interactive: false;
+
+                    HorizontalLayout {
+                        padding: 14px;
+                        spacing: 10px;
+
+                        VerticalLayout {
+                            alignment: center;
+                            CkCoin {
+                                size: 20px;
+                            }
+                        }
+
+                        VerticalLayout {
+                            horizontal-stretch: 1;
+                            alignment: center;
+
+                            Text {
+                                text: "Ishtirok uchun mukofot";
+                                color: Ck.text;
+                                font-family: Ck.sans;
+                                font-size: 13px;
+                                font-weight: 500;
+                            }
+                        }
+
+                        VerticalLayout {
+                            alignment: center;
+                            HorizontalLayout {
+                                spacing: 4px;
+                                Text {
+                                    text: root.reward;
+                                    color: Ck.mint;
+                                    font-family: Ck.mono;
+                                    font-size: 15px;
+                                    font-weight: 700;
+                                    vertical-alignment: center;
+                                }
+                                VerticalLayout {
+                                    alignment: center;
+                                    CkCoin {
+                                        size: 13px;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                CkPrimaryButton {
+                    text: "Yozilishni tasdiqlash";
+                    icon: CkIcons.check;
+                    clicked => {
+                        root.registered();
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ── BUYURTMA TAFSILOTI ──────────────────────────────────────────────────────
+
+export component OrderDetailPage inherits Rectangle {
+    background: transparent;
+
+    in property <string> title: "CK Gaming Headset";
+    in property <string> order-id: "O-9F4A";
+    in property <string> emoji: "🎧";
+    in property <string> price: "850";
+    in property <string> pickup: "CK Cyber-do'kon · IT Park";
+
+    in property <[CkOrderStep]> steps: [
+        { label: "Buyurtma qabul qilindi", time: "27 Noy · 14:22", done: true },
+        { label: "To'lov tasdiqlandi", time: "27 Noy · 14:23", done: true },
+        { label: "Olib ketishga tayyor", time: "QR ko'rsating", done: false },
+    ];
+
+    callback back();
+
+    VerticalLayout {
+        padding-top: Ck.safe-top;
+
+        CkNavBar {
+            vertical-stretch: 0;
+            eyebrow: "BUYURTMA #" + root.order-id;
+            title: "Buyurtma tafsiloti";
+            back => {
+                root.back();
+            }
+        }
+
+        Flickable {
+            vertical-stretch: 1;
+            viewport-width: self.width;
+            viewport-height: col.preferred-height;
+
+            col := VerticalLayout {
+                width: parent.width;
+                alignment: start;
+                padding-left: 20px;
+                padding-right: 20px;
+                padding-bottom: Ck.safe-bottom + 20px;
+                spacing: 14px;
+
+                CkCard {
+                    interactive: false;
+
+                    HorizontalLayout {
+                        padding: 14px;
+                        spacing: 12px;
+
+                        CkImage {
+                            width: 72px;
+                            height: 72px;
+                            radius: 14px;
+                            bga: #4a1a5a;
+                            bgb: #1d0f4a;
+
+                            Text {
+                                text: root.emoji;
+                                font-size: 32px;
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
+                            }
+                        }
+
+                        VerticalLayout {
+                            horizontal-stretch: 1;
+                            alignment: center;
+                            spacing: 4px;
+
+                            Text {
+                                text: root.title;
+                                color: Ck.text;
+                                font-family: Ck.sans;
+                                font-size: 15px;
+                                font-weight: 600;
+                                overflow: elide;
+                            }
+
+                            Text {
+                                text: "#" + root.order-id;
+                                color: Ck.text-mute;
+                                font-family: Ck.mono;
+                                font-size: 11px;
+                            }
+
+                            HorizontalLayout {
+                                spacing: 4px;
+                                alignment: start;
+                                Text {
+                                    text: root.price;
+                                    color: Ck.cyan;
+                                    font-family: Ck.mono;
+                                    font-size: 15px;
+                                    font-weight: 700;
+                                    vertical-alignment: center;
+                                }
+                                VerticalLayout {
+                                    alignment: center;
+                                    CkCoin { size: 13px; }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // holat qadamlari
+                Text {
+                    text: "HOLAT";
+                    color: Ck.text-dim;
+                    font-family: Ck.mono;
+                    font-size: 10px;
+                    letter-spacing: 1.6px;
+                }
+
+                CkCardFlat {
+                    interactive: false;
+
+                    VerticalLayout {
+                        padding: 16px;
+                        spacing: 16px;
+
+                        for st in root.steps: HorizontalLayout {
+                            spacing: 12px;
+
+                            VerticalLayout {
+                                alignment: center;
+                                Rectangle {
+                                    width: 28px;
+                                    height: 28px;
+                                    border-radius: 14px;
+                                    border-width: 1px;
+                                    border-color: st.done ? Ck.mint.transparentize(0.5) : Ck.line;
+                                    background: st.done ? Ck.mint.transparentize(0.85) : Ck.bg2;
+
+                                    CkIcon {
+                                        commands: st.done ? CkIcons.check : CkIcons.clock;
+                                        size: 15px;
+                                        tint: st.done ? Ck.mint : Ck.text-mute;
+                                    }
+                                }
+                            }
+
+                            VerticalLayout {
+                                horizontal-stretch: 1;
+                                alignment: center;
+                                spacing: 2px;
+
+                                Text {
+                                    text: st.label;
+                                    color: st.done ? Ck.text : Ck.text-dim;
+                                    font-family: Ck.sans;
+                                    font-size: 13px;
+                                    font-weight: 500;
+                                }
+
+                                Text {
+                                    text: st.time;
+                                    color: Ck.text-mute;
+                                    font-family: Ck.mono;
+                                    font-size: 10px;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // olib ketish
+                CkCardFlat {
+                    interactive: false;
+
+                    HorizontalLayout {
+                        padding: 14px;
+                        spacing: 10px;
+
+                        CkIconSlot {
+                            commands: CkIcons.map-pin;
+                            size: 18px;
+                            tint: Ck.cyan;
+                        }
+
+                        VerticalLayout {
+                            horizontal-stretch: 1;
+                            alignment: center;
+                            spacing: 2px;
+
+                            Text {
+                                text: "Olib ketish manzili";
+                                color: Ck.text-mute;
+                                font-family: Ck.mono;
+                                font-size: 10px;
+                                letter-spacing: 1.2px;
+                            }
+
+                            Text {
+                                text: root.pickup;
+                                color: Ck.text;
+                                font-family: Ck.sans;
+                                font-size: 13px;
+                                font-weight: 500;
+                                wrap: word-wrap;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

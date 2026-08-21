@@ -1,0 +1,2613 @@
+// ═══════════════════════════════════════════════════════════════════════════
+// CYBERKENT — UMUMIY DIZAYN TIZIMI
+//
+// Sof Slint. Barcha sahifa shu fayldan import qiladi.
+// Manba: CyberKent_1/design-tokens.css va components.jsx
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ───────────────────────────────────────────────────────────────────────────
+// Tokenlar — design-tokens.css'ning :root bloki
+// ───────────────────────────────────────────────────────────────────────────
+
+export global Ck {
+    // Brend
+    out property <color> cyan: #00e5ff;
+    out property <color> purple: #7c4dff;
+    out property <color> magenta: #ff2d95;
+    out property <color> mint: #5bffc2;
+    out property <color> amber: #ffb547;
+    out property <color> danger: #ff5577;
+    out property <color> lilac: #b8a4ff;  // badge-purple matni
+
+    // Sirtlar
+    out property <color> bg0: #06060f;  // sahifa
+    out property <color> bg1: #0a0a18;  // 1-daraja karta
+    out property <color> bg2: #11122a;  // 2-daraja karta
+    out property <color> bg3: #1a1c3a;  // ko'tarilgan
+
+    // Chiziqlar (CSS'da rgba(124,77,255,.18) va .38)
+    out property <color> line: #7c4dff2e;
+    out property <color> line-strong: #7c4dff61;
+
+    // Matn
+    out property <color> text: #eef0ff;
+    out property <color> text-dim: #8b8ec2;
+    out property <color> text-mute: #565a87;
+
+    // Shriftlar. Qurilmada bo'lmasa Slint tizim shriftiga tushadi.
+    out property <string> sans: "Space Grotesk";
+    out property <string> mono: "JetBrains Mono";
+
+    // Radiuslar
+    out property <length> r-sm: 10px;
+    out property <length> r-md: 16px;
+    out property <length> r-lg: 22px;
+
+    // ── XAVFSIZ ZONA ──────────────────────────────────────────────────────
+    // Android oynani butun ekranga ochadi — status bar va navigatsiya paneli
+    // tagida ham. Slint tilida tizim insets'ini o'qish yo'q, shuning uchun
+    // qiymatlar shu yerda turadi (SM-A155F: 450dpi, 384×832dp).
+    // Boshqa telefonda chegara boshqacha bo'lsa — shu ikki sonni o'zgartirish
+    // kifoya. Desktop'da 0 qo'ysa bo'ladi.
+    out property <length> safe-top: 30px;
+    out property <length> safe-bottom: 48px;
+
+    // Suzuvchi tab paneli egallagan joy (60px panel + 20px chet + 20px havo)
+    out property <length> tabbar-space: 100px;
+    // Panelning ekran pastidan chekinishi
+    out property <length> tabbar-gap: 20px;
+    // Aylanadigan qism shu yerda tugaydi: aynan panelning pastki chetida.
+    // Shunda kontent panel ostiga kirib ketadi, lekin uning pastidan
+    // ko'rinmaydi.
+    out property <length> content-bottom: 68px;
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// Ikonkalar — components.jsx'dagi SVG `d` qiymatlari.
+// <rect> va <circle> path buyruqlariga o'girildi, chunki Slint faqat path
+// commands'ni tushunadi. Barchasi 24×24 viewbox'da.
+// ───────────────────────────────────────────────────────────────────────────
+
+export global CkIcons {
+    // navigatsiya
+    out property <string> home: "M4 11l8-6 8 6v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z";
+    out property <string> calendar: "M5 5H19A2 2 0 0 1 21 7V19A2 2 0 0 1 19 21H5A2 2 0 0 1 3 19V7A2 2 0 0 1 5 5Z M3 10h18M8 3v4M16 3v4";
+    out property <string> wallet: "M3 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2H5a2 2 0 0 0 0 4h16v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M15.5 13A1.5 1.5 0 1 0 18.5 13A1.5 1.5 0 1 0 15.5 13Z";
+    out property <string> shop: "M4 8h16l-1 11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z M9 8V6a3 3 0 0 1 6 0v2";
+    out property <string> profile: "M8 8A4 4 0 1 0 16 8A4 4 0 1 0 8 8Z M4 21c1-4 4-6 8-6s7 2 8 6";
+
+    // harakatlar
+    out property <string> ticket: "M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4z M14 6v12";
+    out property <string> trophy: "M6 4h12v4a6 6 0 0 1-12 0z M6 4H3v2a3 3 0 0 0 3 3M18 4h3v2a3 3 0 0 1-3 3M9 21h6M12 14v7";
+    out property <string> game: "M6 7H18A4 4 0 0 1 22 11V14A4 4 0 0 1 18 18H6A4 4 0 0 1 2 14V11A4 4 0 0 1 6 7Z M7 12h3M8.5 10.5v3M13.9 11.5h0.2M16.9 13.5h0.2";
+    out property <string> stream: "M5 5H15A2 2 0 0 1 17 7V14A2 2 0 0 1 15 16H5A2 2 0 0 1 3 14V7A2 2 0 0 1 5 5Z M21 7L17 10V13L21 16Z";
+    out property <string> qr: "M4 3H9A1 1 0 0 1 10 4V9A1 1 0 0 1 9 10H4A1 1 0 0 1 3 9V4A1 1 0 0 1 4 3Z M15 3H20A1 1 0 0 1 21 4V9A1 1 0 0 1 20 10H15A1 1 0 0 1 14 9V4A1 1 0 0 1 15 3Z M4 14H9A1 1 0 0 1 10 15V20A1 1 0 0 1 9 21H4A1 1 0 0 1 3 20V15A1 1 0 0 1 4 14Z M14 14h3v3M20 14v3M14 20h3M19.9 20h0.2";
+    out property <string> package: "M12 3l9 4-9 4-9-4z M3 7v10l9 4 9-4V7 M12 11v10";
+    out property <string> news: "M5 4H19A2 2 0 0 1 21 6V18A2 2 0 0 1 19 20H5A2 2 0 0 1 3 18V6A2 2 0 0 1 5 4Z M7 8h10M7 12h10M7 16h6";
+    out property <string> settings: "M9 12A3 3 0 1 0 15 12A3 3 0 1 0 9 12Z M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1";
+    out property <string> upload: "M12 16V4m-4 4 4-4 4 4M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3";
+    out property <string> trend: "M3 17l6-6 4 4 7-8 M14 7h6v6";
+    out property <string> heart: "M12 20s-7-4.5-7-10a4 4 0 0 1 7-2 4 4 0 0 1 7 2c0 5.5-7 10-7 10z";
+    out property <string> search: "M4 11A7 7 0 1 0 18 11A7 7 0 1 0 4 11Z M20 20L16 16";
+    out property <string> filter: "M3 5h18l-7 8v6l-4-2v-4z";
+
+    // mayda
+    out property <string> bell: "M6 9a6 6 0 0 1 12 0v5l2 3H4l2-3z M10 20a2 2 0 0 0 4 0";
+    out property <string> chev-r: "M9 6l6 6-6 6";
+    out property <string> chev-l: "M15 6l-6 6 6 6";
+    out property <string> lock: "M7 11H17A2 2 0 0 1 19 13V18A2 2 0 0 1 17 20H7A2 2 0 0 1 5 18V13A2 2 0 0 1 7 11Z M8 11V8a4 4 0 0 1 8 0v3";
+    out property <string> chev-d: "M6 9l6 6 6-6";
+    out property <string> user: "M8 8A4 4 0 1 0 16 8A4 4 0 1 0 8 8Z M4 21c1-4 4-6 8-6s7 2 8 6";
+    out property <string> send: "M4 12l17-8-6 18-3-7z M4 12l7 3";
+    out property <string> star: "M12 3l2.5 5.5 6 .8-4.4 4.2 1.1 6L12 16.8 6.8 19.5l1.1-6L3.5 9.3l6-.8z";
+    out property <string> flame: "M12 3c1 4 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4-1 4 2 5 3 4 0-3-2-4 0-10z";
+    out property <string> plus: "M12 5v14M5 12h14";
+    out property <string> trash: "M4 7h16M9 7V4h6v3M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13";
+    out property <string> pin: "M12 22v-7M8 9h8l1 6H7zM10 9V3h4v6";
+    out property <string> arrow-r: "M5 12h14m-6-6 6 6-6 6";
+    out property <string> play: "M7 5l12 7-12 7z";
+    out property <string> close: "M6 6l12 12M18 6L6 18";
+    // uchta to'ldirilgan nuqta
+    out property <string> shield: "M12 3L4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z M9 12l2 2 4-4";
+    out property <string> check: "M5 12l5 5 9-11";
+    out property <string> more: "M4.5 12A0.5 0.5 0 1 0 5.5 12A0.5 0.5 0 1 0 4.5 12Z M11.5 12A0.5 0.5 0 1 0 12.5 12A0.5 0.5 0 1 0 11.5 12Z M18.5 12A0.5 0.5 0 1 0 19.5 12A0.5 0.5 0 1 0 18.5 12Z";
+
+    // ── rol oqimlari va yangi ekranlar uchun qo'shilganlari ────────────────
+    out property <string> globe: "M3 12A9 9 0 1 0 21 12A9 9 0 1 0 3 12Z M3 12h18M12 3c2.6 3 2.6 15 0 18M12 3c-2.6 3-2.6 15 0 18";
+    out property <string> check-circle: "M3 12A9 9 0 1 0 21 12A9 9 0 1 0 3 12Z M8 12l3 3 5-6";
+    out property <string> x-circle: "M3 12A9 9 0 1 0 21 12A9 9 0 1 0 3 12Z M9 9l6 6M15 9l-6 6";
+    out property <string> alert: "M12 3.5l8.5 15.5H3.5z M12 9.5v4.5M11.9 16.6h0.2";
+    out property <string> info: "M3 12A9 9 0 1 0 21 12A9 9 0 1 0 3 12Z M12 11v6M11.9 7.4h0.2";
+    out property <string> refresh: "M20 12a8 8 0 1 1-2.4-5.7 M20 4v5h-5";
+    out property <string> logout: "M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4 M9 8l-4 4 4 4M5 12h10";
+    out property <string> clock: "M3 12A9 9 0 1 0 21 12A9 9 0 1 0 3 12Z M12 7v5.4l3.6 2.1";
+    out property <string> map-pin: "M12 21.5s7-6.4 7-11.5a7 7 0 1 0-14 0c0 5.1 7 11.5 7 11.5z M9.5 10A2.5 2.5 0 1 0 14.5 10A2.5 2.5 0 1 0 9.5 10Z";
+    out property <string> edit: "M4 20h4L18.5 9.5l-4-4L4 16z M14 6l4 4";
+    out property <string> minus: "M5 12h14";
+    out property <string> camera: "M4 8H7L9 5H15L17 8H20A1 1 0 0 1 21 9V18A1 1 0 0 1 20 19H4A1 1 0 0 1 3 18V9A1 1 0 0 1 4 8Z M9 13A3 3 0 1 0 15 13A3 3 0 1 0 9 13Z";
+    out property <string> share: "M15 5.5A2.5 2.5 0 1 0 20 5.5A2.5 2.5 0 1 0 15 5.5Z M15 18.5A2.5 2.5 0 1 0 20 18.5A2.5 2.5 0 1 0 15 18.5Z M4 12A2.5 2.5 0 1 0 9 12A2.5 2.5 0 1 0 4 12Z M8.9 10.8l6.2-3.6M8.9 13.2l6.2 3.6";
+    out property <string> download: "M12 4v11m-4-4 4 4 4-4M4 19h16";
+    out property <string> users: "M9 8A3.5 3.5 0 1 0 16 8A3.5 3.5 0 1 0 9 8Z M3 20c.9-3.3 3.3-5 6.5-5s5.6 1.7 6.5 5 M16 4.7a3.5 3.5 0 0 1 0 6.6M17.5 15.2c2 .7 3.3 2.2 3.9 4.8";
+    out property <string> phone: "M7 3h3l2 5-2.5 1.5a12 12 0 0 0 5 5L16 12l5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 5 5a2 2 0 0 1 2-2z";
+    out property <string> mail: "M4 5H20A1 1 0 0 1 21 6V18A1 1 0 0 1 20 19H4A1 1 0 0 1 3 18V6A1 1 0 0 1 4 5Z M3.5 6.4l8.5 6 8.5-6";
+    out property <string> moon: "M20 14.5a8.5 8.5 0 0 1-10.5-11 8.5 8.5 0 1 0 10.5 11z";
+    out property <string> sun: "M8.5 12A3.5 3.5 0 1 0 15.5 12A3.5 3.5 0 1 0 8.5 12Z M12 3v2M12 19v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M3 12h2M19 12h2M4.6 19.4L6 18M18 6l1.4-1.4";
+    out property <string> bolt: "M13 3L5 14h6l-1 7 8-11h-6z";
+    out property <string> target: "M3 12A9 9 0 1 0 21 12A9 9 0 1 0 3 12Z M7.5 12A4.5 4.5 0 1 0 16.5 12A4.5 4.5 0 1 0 7.5 12Z M11.2 12A0.8 0.8 0 1 0 12.8 12A0.8 0.8 0 1 0 11.2 12Z";
+    out property <string> medal: "M8 3h8l-2.2 6.2h-3.6z M7.5 15A4.5 4.5 0 1 0 16.5 15A4.5 4.5 0 1 0 7.5 15Z M12 13.2l.8 1.6 1.8.3-1.3 1.3.3 1.8-1.6-.9-1.6.9.3-1.8-1.3-1.3 1.8-.3z";
+    out property <string> book: "M5 4H10A2 2 0 0 1 12 6V20A2 2 0 0 0 10 18H5A1 1 0 0 1 4 17V5A1 1 0 0 1 5 4Z M19 4H14A2 2 0 0 0 12 6V20A2 2 0 0 1 14 18H19A1 1 0 0 0 20 17V5A1 1 0 0 0 19 4Z";
+    out property <string> chev-u: "M6 15l6-6 6 6";
+    out property <string> arrow-l: "M19 12H5m6-6-6 6 6 6";
+    out property <string> arrow-u: "M12 19V5m-6 6 6-6 6 6";
+    out property <string> arrow-d: "M12 5v14m6-6-6 6-6-6";
+    out property <string> scan: "M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M4 12h16";
+    out property <string> list: "M8 6h12M8 12h12M8 18h12M4.4 6h.2M4.4 12h.2M4.4 18h.2";
+    out property <string> chart: "M3 20h18M6.5 20v-6M11.5 20V8M16.5 20v-9M21 20V5";
+    out property <string> copy: "M9 9H18A1 1 0 0 1 19 10V19A1 1 0 0 1 18 20H9A1 1 0 0 1 8 19V10A1 1 0 0 1 9 9Z M5.5 15H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v.5";
+    out property <string> gift: "M4 11h16v8a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z M3.5 8h17v3h-17z M12 8v12 M12 8S9.6 8 8.6 7A2 2 0 0 1 11.1 4.6c1 .8 .9 3.4 .9 3.4zM12 8s2.4 0 3.4-1A2 2 0 0 0 12.9 4.6c-1 .8-.9 3.4-.9 3.4z";
+    out property <string> mic: "M9.5 5.5A2.5 2.5 0 0 1 14.5 5.5V11A2.5 2.5 0 0 1 9.5 11Z M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21";
+    out property <string> wifi: "M3.5 9a13 13 0 0 1 17 0M6.5 12.5a8.5 8.5 0 0 1 11 0M9.5 16a4 4 0 0 1 5 0M11.9 19.4h.2";
+    out property <string> flag: "M6 21V4h11l-1.6 3.6L17 11H6";
+    out property <string> eye: "M2.5 12S6 6.5 12 6.5 21.5 12 21.5 12 18 17.5 12 17.5 2.5 12 2.5 12Z M9.5 12A2.5 2.5 0 1 0 14.5 12A2.5 2.5 0 1 0 9.5 12Z";
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// Umumiy ma'lumot turlari
+// ───────────────────────────────────────────────────────────────────────────
+
+// Ikonka + yozuv + rang. Tez harakatlar, tab paneli, profil menyusi — hammasi
+// shu ko'rinishda.
+export struct CkAction {
+    icon: string,
+    label: string,
+    tint: color,
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// Eng mayda bo'laklar
+// ───────────────────────────────────────────────────────────────────────────
+
+// SVG path'ni chizadigan ikonka. Chiziq qalinligi o'lchamga qarab
+// masshtablanadi, shuning uchun 14px va 24px ikonka bir xil og'irlikda ko'rinadi.
+export component CkIcon {
+    in property <string> commands;
+    in property <length> size: 20px;
+    in property <brush> tint: Ck.text;
+    in property <bool> filled: false;
+
+    // `in` xossani to'g'ridan-to'g'ri animatsiya qilib bo'lmaydi, shuning uchun
+    // ichki nusxa. Rang o'zgarishi sakrab emas, oqib o'tadi — tab almashganda
+    // seziladi.
+    property <brush> shown-tint: root.tint;
+    animate shown-tint { duration: 180ms; easing: ease-out; }
+
+    width: root.size;
+    height: root.size;
+
+    Path {
+        width: 100%;
+        height: 100%;
+        viewbox-width: 24;
+        viewbox-height: 24;
+        commands: root.commands;
+        fill: root.filled ? root.shown-tint : transparent;
+        stroke: root.filled ? transparent : root.shown-tint;
+        stroke-width: 1.6px * (root.size / 24px);
+        stroke-line-cap: round;
+        stroke-line-join: round;
+    }
+}
+
+// Ikonkani layout ichida vertikal markazlash uchun — HorizontalLayout bolani
+// cho'zib yuboradi, shuning uchun har joyda VerticalLayout o'rash kerak edi.
+export component CkIconSlot inherits VerticalLayout {
+    in property <string> commands;
+    in property <length> size: 20px;
+    in property <brush> tint: Ck.text;
+    in property <bool> filled: false;
+
+    alignment: center;
+
+    CkIcon {
+        commands: root.commands;
+        size: root.size;
+        tint: root.tint;
+        filled: root.filled;
+    }
+}
+
+// Yumaloq burchakli kvadrat tugma (bell, filter, settings, more).
+export component CkIconButton inherits Rectangle {
+    in property <string> icon;
+    in property <length> size: 36px;
+    in property <length> icon-size: 16px;
+    in property <brush> tint: Ck.text;
+
+    callback clicked();
+
+    width: root.size;
+    height: root.size;
+    border-radius: 12px;
+    border-width: 1px;
+    border-color: Ck.line;
+    background: touch.pressed ? Ck.bg3 : Ck.bg2;
+    animate background { duration: 120ms; }
+
+    touch := TouchArea {
+        clicked => {
+            root.clicked();
+        }
+    }
+
+    CkIcon {
+        commands: root.icon;
+        size: root.icon-size;
+        tint: root.tint;
+    }
+
+    @children
+}
+
+// Bosh harflar bilan avatar.
+export component CkAvatar inherits Rectangle {
+    in property <string> initials: "AB";
+    in property <length> size: 36px;
+
+    width: root.size;
+    height: root.size;
+    border-radius: root.size / 2;
+    border-width: 1px;
+    border-color: Ck.line-strong;
+    background: @linear-gradient(135deg, Ck.purple, Ck.cyan);
+
+    Text {
+        text: root.initials;
+        color: Ck.bg1;
+        font-family: Ck.sans;
+        font-size: root.size * 0.42;
+        font-weight: 700;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+}
+
+// Pulsatsiya qiluvchi "LIVE" nuqtasi. CSS'dagi @keyframes o'rnida — Timer
+// boolean'ni almashtiradi, `animate` esa oradagi kadrlarni o'zi chizadi.
+export component CkLiveDot inherits Rectangle {
+    // Sahifa ko'rinmaganda animatsiyani to'xtatish uchun. Ishlab turgan
+    // animatsiya butun oynani har kadrda qayta chizishga majbur qiladi.
+    in property <bool> running: true;
+
+    property <bool> phase: false;
+
+    width: 8px;
+    height: 8px;
+
+    Timer {
+        interval: 700ms;
+        running: root.running;
+        triggered => {
+            root.phase = !root.phase;
+        }
+    }
+
+    // halo — 8px'lik quticha tashqarisiga chiqadi, bu ataylab.
+    // Faqat `opacity` animatsiya qilinadi: `width`ni o'zgartirish har kadrda
+    // qayta o'lchashga olib keladi.
+    Rectangle {
+        width: 18px;
+        height: 18px;
+        border-radius: 9px;
+        background: Ck.danger.transparentize(0.76);
+        opacity: root.phase ? 0.25 : 1.0;
+        animate opacity {
+            duration: 700ms;
+            easing: ease-in-out;
+        }
+    }
+
+    Rectangle {
+        width: 8px;
+        height: 8px;
+        border-radius: 4px;
+        background: Ck.danger;
+    }
+}
+
+// Kichik mono-yozuvli yorliq. Rang bittadan olinadi: fon, ramka va matn —
+// hammasi shu rangning turli shaffofligi.
+export component CkBadge inherits Rectangle {
+    in property <string> text;
+    in property <color> tint: Ck.cyan;
+    // pulsatsiya qiluvchi nuqta (LIVE)
+    in property <bool> live: false;
+    // LIVE animatsiyasi ishlaydimi — sahifa ko'rinmaganda o'chirib qo'yiladi
+    in property <bool> live-running: true;
+    // oddiy statik nuqta (VERIFIED, ONLINE)
+    in property <bool> dot: false;
+    in property <length> font-size: 10px;
+    // shaffof fon ustida turganda (rasm ichida) qorong'i to'ldirish kerak
+    in property <bool> solid: false;
+
+    height: 22px;
+    // Rectangle sukut bo'yicha ota-elementni to'ldiradi — rasm ustiga x/y
+    // bilan qo'yilganda yorliq butun kenglikka cho'zilib ketardi. Kenglik
+    // yozuvdan olinsin.
+    width: self.preferred-width;
+    border-radius: 8px;
+    border-width: 1px;
+    border-color: root.solid ? #ffffff33 : root.tint.transparentize(0.7);
+    background: root.solid ? #0a0a18bf : root.tint.transparentize(0.86);
+
+    HorizontalLayout {
+        padding-left: 8px;
+        padding-right: 8px;
+        spacing: 6px;
+
+        if root.live: VerticalLayout {
+            alignment: center;
+            CkLiveDot {
+                running: root.live-running;
+            }
+        }
+
+        if root.dot: VerticalLayout {
+            alignment: center;
+
+            Rectangle {
+                width: 6px;
+                height: 6px;
+                border-radius: 3px;
+                background: root.tint;
+            }
+        }
+
+        Text {
+            text: root.text;
+            color: root.solid ? #ffffff : root.tint;
+            font-family: Ck.mono;
+            font-size: root.font-size;
+            letter-spacing: 1.2px;
+            vertical-alignment: center;
+        }
+    }
+}
+
+// Filtr chiplari uchun: faol — cyan halqa, nofaol — kulrang.
+export component CkChip inherits Rectangle {
+    in property <string> text;
+    in property <bool> active: false;
+
+    callback clicked();
+
+    height: 28px;
+    border-radius: 14px;
+    border-width: 1px;
+    border-color: root.active ? Ck.cyan.transparentize(0.72) : Ck.line;
+    background: root.active
+        ? Ck.cyan.transparentize(0.92)
+        : (touch.pressed ? Ck.bg3 : #ffffff0d);
+    animate background { duration: 120ms; }
+
+    touch := TouchArea {
+        clicked => {
+            root.clicked();
+        }
+    }
+
+    HorizontalLayout {
+        padding-left: 11px;
+        padding-right: 11px;
+
+        Text {
+            text: root.text;
+            color: root.active ? Ck.cyan : Ck.text-dim;
+            font-family: Ck.mono;
+            font-size: 10px;
+            letter-spacing: 0.8px;
+            vertical-alignment: center;
+        }
+    }
+}
+
+// CyberAqcha tangasi — mayda variant (narx yonida).
+export component CkCoin inherits Rectangle {
+    in property <length> size: 18px;
+
+    width: root.size;
+    height: root.size;
+
+    // CYBER AQCHA tanga logotipi (kichik).
+    Image {
+        width: root.size;
+        height: root.size;
+        source: @image-url("assets/cyberaqcha.png");
+        image-fit: contain;
+    }
+}
+
+// Gologrammali katta tanga.
+export component CkHoloCoin inherits Rectangle {
+    in property <length> size: 64px;
+
+    width: root.size;
+    height: root.size;
+
+    // Oltin porlash (rasm ostidagi nur).
+    Rectangle {
+        width: root.size * 0.92;
+        height: self.width;
+        border-radius: self.width / 2;
+        background: #ffb547;
+        opacity: 0.35;
+        drop-shadow-blur: root.size / 3;
+        drop-shadow-color: #ffb547;
+    }
+
+    // CYBER AQCHA tanga logotipi.
+    Image {
+        width: root.size;
+        height: root.size;
+        source: @image-url("assets/cyberaqcha.png");
+        image-fit: contain;
+    }
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// Sirtlar
+// ───────────────────────────────────────────────────────────────────────────
+
+// .ck-card — gradientli karta
+export component CkCard inherits Rectangle {
+    callback clicked();
+    // bosilganda javob bermaydigan kartalar uchun
+    in property <bool> interactive: true;
+
+    border-radius: Ck.r-lg;
+    border-width: 1px;
+    border-color: Ck.line;
+    background: @linear-gradient(180deg, Ck.bg2, Ck.bg1);
+
+    touch := TouchArea {
+        enabled: root.interactive;
+        clicked => {
+            root.clicked();
+        }
+    }
+
+    // Bosish javobi. Butun kartaning `opacity`sini o'zgartirish uni alohida
+    // qatlamga chiqaradi (qimmat), shuning uchun ustiga yupqa yorug' parda
+    // qo'yiladi — bu oddiy to'ldirish.
+    Rectangle {
+        border-radius: parent.border-radius;
+        background: #ffffff14;
+        opacity: touch.pressed ? 1.0 : 0.0;
+        animate opacity { duration: 160ms; easing: ease-out; }
+    }
+
+    @children
+}
+
+// .ck-card-flat — tekis karta
+export component CkCardFlat inherits Rectangle {
+    callback clicked();
+    in property <bool> interactive: true;
+
+    border-radius: Ck.r-md;
+    border-width: 1px;
+    border-color: Ck.line;
+    background: Ck.bg1;
+
+    touch := TouchArea {
+        enabled: root.interactive;
+        clicked => {
+            root.clicked();
+        }
+    }
+
+    Rectangle {
+        border-radius: parent.border-radius;
+        background: #ffffff14;
+        opacity: touch.pressed ? 1.0 : 0.0;
+        animate opacity { duration: 160ms; easing: ease-out; }
+    }
+
+    @children
+}
+
+// .ck-card-hero — burchaklarida binafsha va cyan nur bo'lgan karta.
+// CSS'da bu ikkita joylashtirilgan radial-gradient edi; Slint'da radial
+// gradient faqat markazlashgan bo'ladi, shuning uchun ikki katta Rectangle
+// burchaklarga chiqarilib, ota-element clip qiladi.
+export component CkHeroCard inherits Rectangle {
+    callback clicked();
+    in property <bool> interactive: false;
+
+    border-radius: Ck.r-lg;
+    border-width: 1px;
+    border-color: Ck.line-strong;
+    background: @linear-gradient(180deg, Ck.bg3, Ck.bg1);
+    clip: true;
+
+    Rectangle {
+        x: -self.width / 2;
+        y: -self.height / 2;
+        width: parent.width * 1.4;
+        height: self.width;
+        background: @radial-gradient(circle, Ck.purple.transparentize(0.68) 0%, #00000000 62%);
+    }
+
+    Rectangle {
+        x: parent.width - self.width / 2;
+        y: parent.height - self.height / 2;
+        width: parent.width * 1.4;
+        height: self.width;
+        background: @radial-gradient(circle, Ck.cyan.transparentize(0.72) 0%, #00000000 62%);
+    }
+
+    touch := TouchArea {
+        enabled: root.interactive;
+        clicked => {
+            root.clicked();
+        }
+    }
+
+    Rectangle {
+        border-radius: parent.border-radius;
+        background: #ffffff14;
+        opacity: touch.pressed ? 1.0 : 0.0;
+        animate opacity { duration: 160ms; easing: ease-out; }
+    }
+
+    @children
+}
+
+// .ck-image — rasm o'rnidagi gradientli quti. Ichiga emoji, sana yoki yorliq
+// qo'yiladi.
+export component CkImage inherits Rectangle {
+    in property <color> bga: #2a1a5a;
+    in property <color> bgb: #0f1d4a;
+    in property <length> radius: Ck.r-md;
+
+    border-radius: root.radius;
+    // uchinchi to'xtash — olib tashlangan cyan dog'i o'rniga
+    background: @linear-gradient(135deg, root.bga 0%, root.bgb 60%, #14425f 100%);
+    clip: true;
+
+    // Yuqori chapdagi yorug'lik. Dizaynda pastki o'ngda yana bitta cyan dog'i
+    // bor edi — ro'yxatda 4-5 karta bo'lganda o'shancha qo'shimcha katta
+    // gradient degani, shuning uchun cyan tusi asosiy gradientning o'ziga
+    // ko'chirildi.
+    Rectangle {
+        x: parent.width * 0.2 - self.width / 2;
+        y: parent.height * 0.2 - self.height / 2;
+        width: parent.width * 1.4;
+        height: self.width;
+        background: @radial-gradient(circle, #ffffff2e 0%, #00000000 60%);
+    }
+
+    @children
+}
+
+// .ck-stat — raqamli quticha
+export component CkStat inherits Rectangle {
+    in property <string> label;
+    in property <string> value;
+    in property <color> tint: Ck.text;
+    in property <bool> coin: false;
+
+    border-radius: Ck.r-md;
+    border-width: 1px;
+    border-color: Ck.line;
+    background: Ck.bg2;
+
+    VerticalLayout {
+        padding: 14px;
+        spacing: 4px;
+
+        Text {
+            text: root.label;
+            color: Ck.text-mute;
+            font-family: Ck.mono;
+            font-size: 9px;
+            letter-spacing: 1.3px;
+        }
+
+        HorizontalLayout {
+            spacing: 4px;
+            alignment: start;
+            Text {
+                text: root.value;
+                color: root.tint;
+                font-family: Ck.sans;
+                font-size: 22px;
+                font-weight: 600;
+                vertical-alignment: center;
+            }
+            if root.coin : VerticalLayout {
+                alignment: center;
+                CkCoin { size: 18px; }
+            }
+        }
+    }
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// Tugmalar
+// ───────────────────────────────────────────────────────────────────────────
+
+// .ck-btn + shaffof oq fon — hero karta ustida ishlatiladi.
+export component CkGlassButton inherits Rectangle {
+    in property <string> icon;
+    in property <string> text;
+
+    callback clicked();
+
+    height: 36px;
+    border-radius: 10px;
+    background: touch.pressed ? #ffffff2b : (touch.has-hover ? #ffffff24 : #ffffff1a);
+    animate background { duration: 120ms; }
+
+    touch := TouchArea {
+        clicked => {
+            root.clicked();
+        }
+    }
+
+    HorizontalLayout {
+        alignment: center;
+        spacing: 8px;
+
+        if root.icon != "": CkIconSlot {
+            commands: root.icon;
+            size: 14px;
+            tint: #ffffff;
+        }
+
+        Text {
+            text: root.text;
+            color: #ffffff;
+            font-family: Ck.sans;
+            font-size: 13px;
+            font-weight: 600;
+            vertical-alignment: center;
+        }
+    }
+}
+
+// .ck-btn-ghost — cyan halqali shaffof tugma.
+export component CkGhostButton inherits Rectangle {
+    in property <string> text;
+    in property <color> tint: Ck.cyan;
+
+    callback clicked();
+
+    height: 36px;
+    border-radius: Ck.r-sm;
+    border-width: 1px;
+    border-color: root.tint.transparentize(0.6);
+    background: touch.pressed ? root.tint.transparentize(0.85) : transparent;
+    animate background { duration: 120ms; }
+
+    touch := TouchArea {
+        clicked => {
+            root.clicked();
+        }
+    }
+
+    HorizontalLayout {
+        padding-left: 14px;
+        padding-right: 14px;
+        alignment: center;
+
+        Text {
+            text: root.text;
+            color: root.tint;
+            font-family: Ck.sans;
+            font-size: 13px;
+            font-weight: 600;
+            vertical-alignment: center;
+        }
+    }
+}
+
+// .ck-btn-danger — chiqish tugmasi.
+export component CkDangerButton inherits Rectangle {
+    in property <string> icon;
+    in property <string> text;
+
+    callback clicked();
+
+    height: 48px;
+    border-radius: 14px;
+    border-width: 1px;
+    border-color: Ck.danger.transparentize(0.65);
+    background: touch.pressed
+        ? Ck.danger.transparentize(0.76)
+        : Ck.danger.transparentize(0.86);
+    animate background { duration: 120ms; }
+
+    touch := TouchArea {
+        clicked => {
+            root.clicked();
+        }
+    }
+
+    HorizontalLayout {
+        alignment: center;
+        spacing: 8px;
+
+        if root.icon != "": CkIconSlot {
+            commands: root.icon;
+            size: 16px;
+            tint: Ck.danger;
+        }
+
+        Text {
+            text: root.text;
+            color: Ck.danger;
+            font-family: Ck.sans;
+            font-size: 14px;
+            font-weight: 600;
+            vertical-alignment: center;
+        }
+    }
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// Kirish maydoni
+// ───────────────────────────────────────────────────────────────────────────
+
+// .ck-input + qidiruv ikonkasi. std-widgets'dagi LineEdit dizaynga to'g'ri
+// kelmagani uchun quyi darajali TextInput'dan yasaldi — placeholder ham
+// qo'lda, chunki TextInput'da bunday xossa yo'q.
+export component CkSearchInput inherits Rectangle {
+    in property <string> placeholder;
+    in-out property <string> text <=> input.text;
+
+    callback edited();
+    callback accepted();
+
+    height: 44px;
+    border-radius: 14px;
+    border-width: 1px;
+    border-color: input.has-focus ? Ck.line-strong : Ck.line;
+    background: Ck.bg2;
+    animate border-color { duration: 120ms; }
+
+    HorizontalLayout {
+        padding-left: 14px;
+        padding-right: 14px;
+        spacing: 10px;
+
+        CkIconSlot {
+            commands: CkIcons.search;
+            size: 16px;
+            tint: Ck.text-mute;
+        }
+
+        Rectangle {
+            horizontal-stretch: 1;
+
+            input := TextInput {
+                width: 100%;
+                height: 100%;
+                vertical-alignment: center;
+                font-family: Ck.sans;
+                font-size: 15px;
+                color: Ck.text;
+                selection-background-color: Ck.cyan.transparentize(0.6);
+                selection-foreground-color: Ck.text;
+
+                edited => {
+                    root.edited();
+                }
+                accepted => {
+                    root.accepted();
+                }
+            }
+
+            if input.text == "": Text {
+                x: 0;
+                y: 0;
+                width: parent.width;
+                height: parent.height;
+                text: root.placeholder;
+                color: Ck.text-mute;
+                font-family: Ck.sans;
+                font-size: 15px;
+                vertical-alignment: center;
+            }
+        }
+    }
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// Sarlavhalar
+// ───────────────────────────────────────────────────────────────────────────
+
+// .ck-topbar — sahifa boshi. O'ng tomonga qo'yiladigan narsa `@children`
+// orqali beriladi (tugma, balans chipi va h.k.).
+export component CkTopBar inherits HorizontalLayout {
+    in property <string> eyebrow;
+    in property <string> title;
+    in property <string> sub;
+
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-top: 14px;
+    padding-bottom: 6px;
+    spacing: 12px;
+
+    VerticalLayout {
+        horizontal-stretch: 1;
+        alignment: center;
+        spacing: 2px;
+
+        if root.eyebrow != "": Text {
+            text: root.eyebrow;
+            color: Ck.cyan;
+            font-family: Ck.mono;
+            font-size: 10px;
+            letter-spacing: 1.8px;
+        }
+
+        if root.title != "": Text {
+            text: root.title;
+            color: Ck.text;
+            font-family: Ck.sans;
+            font-size: 22px;
+            font-weight: 600;
+        }
+
+        if root.sub != "": Text {
+            text: root.sub;
+            color: Ck.text-dim;
+            font-family: Ck.sans;
+            font-size: 12px;
+        }
+    }
+
+    @children
+}
+
+// Bo'lim sarlavhasi + o'ngdagi "BARCHASI →".
+export component CkSectionHead inherits HorizontalLayout {
+    in property <string> title;
+    in property <string> action;
+
+    callback action-clicked();
+
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-top: 14px;
+    padding-bottom: 8px;
+
+    Text {
+        text: root.title;
+        color: Ck.text;
+        font-family: Ck.sans;
+        font-size: 17px;
+        font-weight: 600;
+        vertical-alignment: bottom;
+    }
+
+    Rectangle {
+        horizontal-stretch: 1;
+    }
+
+    if root.action != "": Rectangle {
+        horizontal-stretch: 0;
+
+        TouchArea {
+            clicked => {
+                root.action-clicked();
+            }
+        }
+
+        Text {
+            text: root.action + "  →";
+            color: Ck.cyan;
+            font-family: Ck.mono;
+            font-size: 11px;
+            letter-spacing: 0.9px;
+            vertical-alignment: bottom;
+            horizontal-alignment: right;
+        }
+    }
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// Sahifa karkasi
+// ───────────────────────────────────────────────────────────────────────────
+
+// Har sahifada takrorlanadigan narsa: skroll + status bar uchun yuqori chet +
+// suzuvchi tab paneli uchun pastki chet. Bolalar to'g'ridan-to'g'ri vertikal
+// ustunga tushadi.
+export component CkScroll inherits Rectangle {
+    in property <bool> pad-top: true;
+
+    background: transparent;
+
+    // Skroll aynan tab panelining pastki chetida tugaydi — aks holda kontent
+    // panelning pastidan ko'rinib qoladi.
+    Flickable {
+        y: 0;
+        width: 100%;
+        height: parent.height - Ck.content-bottom;
+        viewport-width: self.width;
+        viewport-height: col.preferred-height;
+        viewport-y: -CkDebug.scroll;
+
+        col := VerticalLayout {
+            width: root.width;
+            alignment: start;
+            padding-top: root.pad-top ? Ck.safe-top : 0px;
+            padding-bottom: Ck.tabbar-space;
+
+            @children
+        }
+    }
+}
+
+// Fon: aurora dog'lari + 32px'lik to'r. Sahifalarda emas, qobiqda bir marta
+// chiziladi.
+export component CkBackdrop inherits Rectangle {
+    background: Ck.bg0;
+    clip: true;
+
+    // Aurora — CSS'dagi joylashtirilgan radial gradientlar.
+    //
+    // Ishlash uchun: har bir dog' ekran o'lchamidan katta va ustma-ust
+    // chiziladi, ya'ni overdraw. Dizaynda uchta edi; magenta dog'i 10%
+    // shaffoflikda deyarli ko'rinmas ekan — olib tashlandi.
+    Rectangle {
+        x: parent.width * 0.2 - self.width / 2;
+        y: parent.height * 0.1 - self.height / 2;
+        width: parent.width * 1.3;
+        height: self.width;
+        background: @radial-gradient(circle, Ck.cyan.transparentize(0.8) 0%, #00000000 70%);
+    }
+
+    Rectangle {
+        x: parent.width * 0.8 - self.width / 2;
+        y: parent.height * 0.35 - self.height / 2;
+        width: parent.width * 1.3;
+        height: self.width;
+        background: @radial-gradient(circle, Ck.purple.transparentize(0.76) 0%, #00000000 70%);
+    }
+
+    // 32px'lik to'r. CSS'da mask bilan pastga qarab so'nadi.
+    //
+    // Ishlash uchun: chiziqlarda `opacity` ishlatilmaydi — u har bir element
+    // uchun alohida qatlam yasab, har kadrda qimmatga tushadi. O'rniga
+    // so'nish rangning alfasiga qo'shib yuborilgan.
+    for i in 12: Rectangle {
+        x: i * 32px;
+        y: 0;
+        width: 1px;
+        height: parent.height;
+        background: @linear-gradient(180deg,
+            Ck.cyan.transparentize(0.88) 0%,
+            #00000000 65%);
+    }
+
+    for i in 18: Rectangle {
+        x: 0;
+        y: i * 32px;
+        width: parent.width;
+        height: 1px;
+        background: Ck.cyan.transparentize(0.88 + 0.12 * (i / 18.0));
+    }
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// Brend va shakl elementlari
+// ───────────────────────────────────────────────────────────────────────────
+
+// Logotip. PNG 656×805, shuning uchun balandlik kenglikdan 1.227 baravar.
+export component CkLogo inherits Image {
+    in property <length> size: 32px;
+
+    source: @image-url("assets/cyberkent-logo.png");
+    width: root.size;
+    height: root.size * 1.227;
+    image-fit: contain;
+}
+
+// .ck-btn-primary — cyan→binafsha gradient, qorong'i yozuv.
+export component CkPrimaryButton inherits Rectangle {
+    in property <string> text;
+    in property <string> icon;
+    in property <bool> enabled: true;
+
+    callback clicked();
+
+    height: 48px;
+    border-radius: 14px;
+    background: @linear-gradient(135deg, #00e5ff, #7c4dff);
+    opacity: root.enabled ? (touch.pressed ? 0.82 : 1.0) : 0.4;
+    animate opacity { duration: 140ms; easing: ease-out; }
+    drop-shadow-blur: 12px;
+    drop-shadow-color: Ck.cyan.transparentize(0.65);
+    drop-shadow-offset-y: 4px;
+
+    touch := TouchArea {
+        enabled: root.enabled;
+        clicked => {
+            root.clicked();
+        }
+    }
+
+    HorizontalLayout {
+        alignment: center;
+        spacing: 8px;
+
+        Text {
+            text: root.text;
+            color: Ck.bg1;
+            font-family: Ck.sans;
+            font-size: 14px;
+            font-weight: 700;
+            vertical-alignment: center;
+        }
+
+        if root.icon != "": CkIconSlot {
+            commands: root.icon;
+            size: 16px;
+            tint: Ck.bg1;
+        }
+    }
+}
+
+// .ck-btn-secondary — binafsha halqali xira tugma.
+export component CkSecondaryButton inherits Rectangle {
+    in property <string> text;
+
+    callback clicked();
+
+    height: 48px;
+    border-radius: 14px;
+    border-width: 1px;
+    border-color: Ck.line-strong;
+    background: touch.pressed
+        ? Ck.purple.transparentize(0.78)
+        : Ck.purple.transparentize(0.88);
+    animate background { duration: 140ms; easing: ease-out; }
+
+    touch := TouchArea {
+        clicked => {
+            root.clicked();
+        }
+    }
+
+    Text {
+        text: root.text;
+        color: Ck.text;
+        font-family: Ck.mono;
+        font-size: 12px;
+        font-weight: 600;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+}
+
+// .ck-input + .ck-input-label — yorliqli kiritish maydoni.
+export component CkField inherits VerticalLayout {
+    in property <string> label;
+    in property <string> placeholder;
+    in property <bool> password: false;
+    in property <bool> read-only: false;
+    // Maydon ostidagi kichik izoh. `invalid` bo'lsa qizil rangda ko'rinadi.
+    in property <string> hint;
+    in property <bool> invalid: false;
+    // To'g'ri to'ldirilgan — o'ng chetda yashil belgi.
+    in property <bool> ok: false;
+    // Yorliq o'ngidagi bosiladigan matn (masalan: KO'RSATISH).
+    in property <string> action-text;
+    in-out property <string> text <=> input.text;
+
+    callback accepted();
+    callback edited();
+    callback action();
+
+    spacing: 6px;
+
+    HorizontalLayout {
+        spacing: 8px;
+
+        Text {
+            text: root.label;
+            color: root.invalid ? Ck.danger : Ck.text-dim;
+            font-family: Ck.mono;
+            font-size: 10px;
+            letter-spacing: 1.6px;
+            vertical-alignment: center;
+        }
+
+        Rectangle {
+            horizontal-stretch: 1;
+        }
+
+        if root.action-text != "": Rectangle {
+            width: act.preferred-width;
+            height: act.preferred-height;
+
+            TouchArea {
+                clicked => {
+                    root.action();
+                }
+            }
+
+            act := Text {
+                text: root.action-text;
+                color: Ck.cyan;
+                font-family: Ck.mono;
+                font-size: 10px;
+                letter-spacing: 1.4px;
+            }
+        }
+    }
+
+    Rectangle {
+        height: 52px;
+        border-radius: 14px;
+        border-width: 1px;
+        border-color: root.invalid
+            ? Ck.danger.transparentize(0.4)
+            : (input.has-focus ? Ck.cyan.transparentize(0.55) : Ck.line);
+        background: Ck.bg2;
+        animate border-color { duration: 140ms; easing: ease-out; }
+
+        HorizontalLayout {
+            padding-left: 16px;
+            padding-right: 16px;
+            spacing: 10px;
+
+            Rectangle {
+                horizontal-stretch: 1;
+
+                input := TextInput {
+                    width: 100%;
+                    height: 100%;
+                    vertical-alignment: center;
+                    font-family: Ck.sans;
+                    font-size: 15px;
+                    color: Ck.text;
+                    input-type: root.password ? InputType.password : InputType.text;
+                    read-only: root.read-only;
+                    selection-background-color: Ck.cyan.transparentize(0.6);
+                    selection-foreground-color: Ck.text;
+                    accepted => {
+                        root.accepted();
+                    }
+                    edited => {
+                        root.edited();
+                    }
+                }
+
+                if input.text == "": Text {
+                    x: 0;
+                    y: 0;
+                    width: parent.width;
+                    height: parent.height;
+                    text: root.placeholder;
+                    color: Ck.text-mute;
+                    font-family: Ck.sans;
+                    font-size: 15px;
+                    vertical-alignment: center;
+                }
+            }
+
+            if root.ok: VerticalLayout {
+                alignment: center;
+                CkIcon {
+                    commands: CkIcons.check;
+                    size: 16px;
+                    tint: Ck.mint;
+                }
+            }
+        }
+    }
+
+    if root.hint != "": Text {
+        text: root.hint;
+        color: root.invalid ? Ck.danger : Ck.text-mute;
+        font-family: Ck.sans;
+        font-size: 11px;
+        wrap: word-wrap;
+    }
+}
+
+// .ck-progress — ingichka indikator.
+export component CkProgress inherits Rectangle {
+    in property <float> value: 0.5;
+
+    height: 4px;
+    border-radius: 2px;
+    background: Ck.purple.transparentize(0.88);
+
+    Rectangle {
+        x: 0;
+        width: parent.width * root.value;
+        height: parent.height;
+        border-radius: parent.border-radius;
+        background: @linear-gradient(90deg, Ck.cyan, Ck.purple);
+        animate width { duration: 400ms; easing: ease-out; }
+    }
+}
+
+// Ichki ekranlarning yuqori paneli: orqaga tugmasi + sarlavha.
+export component CkNavBar inherits HorizontalLayout {
+    in property <string> title;
+    in property <string> eyebrow;
+
+    callback back();
+
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-top: 12px;
+    padding-bottom: 10px;
+    spacing: 12px;
+
+    VerticalLayout {
+        alignment: center;
+        CkIconButton {
+            icon: CkIcons.chev-l;
+            clicked => {
+                root.back();
+            }
+        }
+    }
+
+    VerticalLayout {
+        horizontal-stretch: 1;
+        alignment: center;
+        spacing: 2px;
+
+        if root.eyebrow != "": Text {
+            text: root.eyebrow;
+            color: Ck.cyan;
+            font-family: Ck.mono;
+            font-size: 10px;
+            letter-spacing: 1.8px;
+        }
+
+        Text {
+            text: root.title;
+            color: Ck.text;
+            font-family: Ck.sans;
+            font-size: 18px;
+            font-weight: 600;
+            overflow: elide;
+        }
+    }
+
+    @children
+}
+
+// Yoqish/o'chirish tugmasi (sozlamalar, filtrlar).
+export component CkToggle inherits Rectangle {
+    in-out property <bool> on;
+
+    callback toggled(on: bool);
+
+    // Root o'lchami qat'iy — lekin layout uni baribir cho'zishi mumkin, shuning
+    // uchun ko'rinadigan trek ICHKI element sifatida qat'iy o'lchamda va MARKAZDA
+    // chiziladi. Shunda qanday joylashuvda ham switch to'g'ri va tekis turadi.
+    width: 46px;
+    height: 28px;
+    background: transparent;
+
+    TouchArea {
+        clicked => {
+            root.on = !root.on;
+            root.toggled(root.on);
+        }
+    }
+
+    track := Rectangle {
+        // Har qanday cho'zilishda markazda qat'iy 46×28 pill.
+        x: (parent.width - self.width) / 2;
+        y: (parent.height - self.height) / 2;
+        width: 46px;
+        height: 28px;
+        border-radius: 14px;
+        border-width: 1px;
+        border-color: root.on ? Ck.cyan.transparentize(0.6) : Ck.line;
+        background: root.on ? Ck.cyan.transparentize(0.84) : Ck.bg3;
+        animate background, border-color { duration: 160ms; easing: ease-out; }
+
+        knob := Rectangle {
+            x: root.on ? track.width - self.width - 3px : 3px;
+            y: (track.height - self.height) / 2;
+            width: 22px;
+            height: 22px;
+            border-radius: 11px;
+            background: root.on ? Ck.cyan : Ck.text-mute;
+            animate x, background { duration: 180ms; easing: ease-out-quint; }
+        }
+    }
+}
+
+// Ikonka + sarlavha + izoh + o'ngdagi qiymat/chevron. Ro'yxatlarda eng ko'p
+// takrorlanadigan qator.
+export component CkListRow inherits Rectangle {
+    in property <string> icon;
+    in property <color> tint: Ck.cyan;
+    in property <string> title;
+    in property <string> sub;
+    // o'ngda ko'rsatiladigan qiymat (narx, vaqt, holat)
+    in property <string> value;
+    in property <color> value-tint: Ck.text;
+    in property <bool> chevron: true;
+    in property <bool> interactive: true;
+
+    callback clicked();
+
+    height: self.preferred-height;
+    border-radius: Ck.r-md;
+    border-width: 1px;
+    border-color: Ck.line;
+    background: Ck.bg1;
+
+    touch := TouchArea {
+        enabled: root.interactive;
+        clicked => {
+            root.clicked();
+        }
+    }
+
+    Rectangle {
+        border-radius: parent.border-radius;
+        background: #ffffff14;
+        opacity: touch.pressed ? 1.0 : 0.0;
+        animate opacity { duration: 160ms; easing: ease-out; }
+    }
+
+    HorizontalLayout {
+        padding: 14px;
+        spacing: 12px;
+
+        if root.icon != "": VerticalLayout {
+            alignment: center;
+
+            Rectangle {
+                width: 36px;
+                height: 36px;
+                border-radius: Ck.r-sm;
+                background: root.tint.transparentize(0.88);
+
+                CkIcon {
+                    commands: root.icon;
+                    size: 18px;
+                    tint: root.tint;
+                }
+            }
+        }
+
+        VerticalLayout {
+            horizontal-stretch: 1;
+            alignment: center;
+            spacing: 3px;
+
+            Text {
+                text: root.title;
+                color: Ck.text;
+                font-family: Ck.sans;
+                font-size: 14px;
+                font-weight: 600;
+                overflow: elide;
+            }
+
+            if root.sub != "": Text {
+                text: root.sub;
+                color: Ck.text-dim;
+                font-family: Ck.sans;
+                font-size: 12px;
+                overflow: elide;
+            }
+        }
+
+        if root.value != "": VerticalLayout {
+            alignment: center;
+
+            Text {
+                text: root.value;
+                color: root.value-tint;
+                font-family: Ck.mono;
+                font-size: 13px;
+                font-weight: 600;
+                horizontal-alignment: right;
+            }
+        }
+
+        if root.chevron: CkIconSlot {
+            commands: CkIcons.chev-r;
+            size: 16px;
+            tint: Ck.text-mute;
+        }
+    }
+}
+
+// Bo'sh ro'yxat holati.
+export component CkEmpty inherits VerticalLayout {
+    in property <string> icon: CkIcons.package;
+    in property <string> title;
+    in property <string> sub;
+
+    alignment: center;
+    spacing: 12px;
+    padding: 28px;
+
+    HorizontalLayout {
+        alignment: center;
+
+        Rectangle {
+            width: 72px;
+            height: 72px;
+            border-radius: 24px;
+            border-width: 1px;
+            border-color: Ck.line;
+            background: Ck.bg2;
+
+            CkIcon {
+                commands: root.icon;
+                size: 32px;
+                tint: Ck.text-mute;
+            }
+        }
+    }
+
+    Text {
+        text: root.title;
+        color: Ck.text;
+        font-family: Ck.sans;
+        font-size: 16px;
+        font-weight: 600;
+        horizontal-alignment: center;
+    }
+
+    if root.sub != "": Text {
+        text: root.sub;
+        color: Ck.text-dim;
+        font-family: Ck.sans;
+        font-size: 13px;
+        horizontal-alignment: center;
+        wrap: word-wrap;
+    }
+}
+
+// Segmentli almashtirgich (TOPSHIRIQLAR / O'YINLAR / YUTUQLAR kabi).
+export component CkSegment inherits Rectangle {
+    in property <[string]> items;
+    in-out property <int> current: 0;
+
+    callback changed(index: int);
+
+    height: 40px;
+    border-radius: 14px;
+    border-width: 1px;
+    border-color: Ck.line;
+    background: Ck.bg2;
+
+    Rectangle {
+        x: 4px + root.current * ((root.width - 8px) / max(root.items.length, 1));
+        y: 4px;
+        width: (root.width - 8px) / max(root.items.length, 1);
+        height: parent.height - 8px;
+        border-radius: Ck.r-sm;
+        background: Ck.cyan.transparentize(0.88);
+        border-width: 1px;
+        border-color: Ck.cyan.transparentize(0.78);
+        animate x { duration: 260ms; easing: ease-out-quint; }
+    }
+
+    HorizontalLayout {
+        padding: 4px;
+
+        for it[index] in root.items: seg := Rectangle {
+            horizontal-stretch: 1;
+
+            property <bool> on: root.current == index;
+
+            TouchArea {
+                clicked => {
+                    root.current = index;
+                    root.changed(index);
+                }
+            }
+
+            Text {
+                text: it;
+                color: seg.on ? Ck.cyan : Ck.text-dim;
+                font-family: Ck.mono;
+                font-size: 10px;
+                letter-spacing: 1.2px;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+                overflow: elide;
+                animate color { duration: 180ms; easing: ease-out; }
+            }
+        }
+    }
+}
+
+// Kamera o'rnidagi skaner oynasi: burchak qavslari va yuqoridan pastga
+// suriladigan chiziq. Tekshiruvchi, sotuvchi va quiz skanerlari bir xil
+// ko'rinishda.
+export component CkScanFrame inherits Rectangle {
+    in property <length> size: 240px;
+    in property <color> tint: Ck.cyan;
+    // Ekran ko'rinmaganda animatsiya to'xtaydi.
+    in property <bool> running: true;
+
+    private property <bool> down: false;
+
+    width: root.size;
+    height: root.size;
+    border-radius: Ck.r-lg;
+    background: #00000073;
+    clip: true;
+
+    Timer {
+        interval: 1600ms;
+        running: root.running;
+        triggered => {
+            root.down = !root.down;
+        }
+    }
+
+    // burchak qavslari — har biri ikkita to'g'ri to'rtburchak
+    for c in 4: Rectangle {
+        property <bool> right: mod(c, 2) == 1;
+        property <bool> bottom: c > 1;
+
+        x: self.right ? parent.width - self.width - 14px : 14px;
+        y: self.bottom ? parent.height - self.height - 14px : 14px;
+        width: 34px;
+        height: 34px;
+
+        // gorizontal chiziq
+        Rectangle {
+            x: 0;
+            y: parent.bottom ? parent.height - self.height : 0px;
+            width: parent.width;
+            height: 3px;
+            border-radius: 1.5px;
+            background: root.tint;
+        }
+
+        // vertikal chiziq
+        Rectangle {
+            x: parent.right ? parent.width - self.width : 0px;
+            y: 0;
+            width: 3px;
+            height: parent.height;
+            border-radius: 1.5px;
+            background: root.tint;
+        }
+    }
+
+    // suriladigan chiziq
+    Rectangle {
+        x: 20px;
+        y: root.down ? parent.height - 40px : 40px;
+        width: parent.width - 40px;
+        height: 2px;
+        background: @linear-gradient(90deg, #00000000, root.tint, #00000000);
+        animate y {
+            duration: 1600ms;
+            easing: ease-in-out;
+        }
+    }
+
+    // chiziq ortidagi nur
+    Rectangle {
+        x: 20px;
+        y: root.down ? parent.height - 40px - self.height : 40px;
+        width: parent.width - 40px;
+        height: 46px;
+        background: @linear-gradient(180deg,
+            root.tint.transparentize(1.0),
+            root.tint.transparentize(0.86));
+        animate y {
+            duration: 1600ms;
+            easing: ease-in-out;
+        }
+    }
+
+    @children
+}
+
+// Raqamli kod maydoni (tekshiruvchi/sotuvchi kodi, Telegram tasdiqlash kodi).
+// Flutter'dagi kabi bitta keng maydon: markazlashgan yirik raqamlar, oralig'i
+// keng. Slint'da satrni bo'lakka ajratib bo'lmaydi, shuning uchun alohida
+// katakchalar emas — bu ayni asl ilovadagi ko'rinish.
+export component CkCodeInput inherits Rectangle {
+    in property <int> digits: 4;
+    in property <bool> error: false;
+    in-out property <string> text <=> input.text;
+
+    // To'liq kiritilganda — tasdiqlash tugmasini bosmasdan o'tadi.
+    callback completed();
+    callback accepted();
+    callback edited();
+
+    // Uzunlik chegarasi: Slint'da `substring` yo'q, shuning uchun oxirgi
+    // to'g'ri qiymat saqlanadi va ortiqcha belgi kiritilganda tiklanadi.
+    private property <string> last-good: "";
+
+    height: 64px;
+    border-radius: 14px;
+    border-width: input.has-focus ? 1.6px : 1px;
+    border-color: root.error
+        ? Ck.danger
+        : (input.has-focus ? Ck.cyan : Ck.line);
+    background: Ck.bg2;
+    animate border-color { duration: 140ms; }
+
+    input := TextInput {
+        width: 100%;
+        height: 100%;
+        color: Ck.text;
+        font-family: Ck.sans;
+        font-size: 30px;
+        font-weight: 700;
+        letter-spacing: 16px;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+        input-type: InputType.number;
+        selection-background-color: Ck.cyan.transparentize(0.6);
+        selection-foreground-color: Ck.text;
+
+        edited => {
+            if (self.text.character-count > root.digits) {
+                self.text = root.last-good;
+            } else {
+                root.last-good = self.text;
+            }
+            root.edited();
+            if (self.text.character-count == root.digits) {
+                root.completed();
+            }
+        }
+        accepted => {
+            root.accepted();
+        }
+    }
+
+    // O'rin egallovchi nuqtalar.
+    if input.text == "": Text {
+        text: root.digits == 6 ? "••••••" : "••••";
+        color: Ck.text-mute;
+        font-family: Ck.sans;
+        font-size: 30px;
+        font-weight: 700;
+        letter-spacing: 16px;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+}
+
+// Ajratuvchi chiziq — o'rtasi yorug', chetlari so'nadi.
+export component CkDivider inherits Rectangle {
+    height: 1px;
+    background: @linear-gradient(90deg, #00000000, Ck.line-strong, #00000000);
+}
+
+// QR kod ko'rinishi. Haqiqiy QR kodlash Slint tilida yozilmaydi (bit
+// manipulyatsiyasi va Reed-Solomon kerak), shuning uchun bu — barqaror
+// naqsh: uchta burchak nishoni va indeksdan hisoblanadigan modullar.
+// Haqiqiy kod kerak bo'lganda Rust tomonidan `Image` sifatida beriladi.
+export component CkQr inherits Rectangle {
+    in property <length> size: 200px;
+    in property <string> payload: "CK-EVT-2024-X9F4";
+
+    // 21×21 — QR v1 o'lchami
+    private property <int> modules: 21;
+    private property <length> cell: (root.size - 24px) / 21;
+
+    width: root.size;
+    height: root.size;
+    border-radius: Ck.r-md;
+    background: #ffffff;
+
+    Rectangle {
+        x: 12px;
+        y: 12px;
+        width: root.cell * root.modules;
+        height: self.width;
+
+        // ma'lumot modullari
+        for i in 441: Rectangle {
+            property <int> r: floor(i / 21);
+            property <int> c: mod(i, 21);
+            // uchta burchak nishoni egallagan joy
+            property <bool> reserved:
+                (self.r < 8 && self.c < 8)
+                || (self.r < 8 && self.c > 12)
+                || (self.r > 12 && self.c < 8);
+
+            x: self.c * root.cell;
+            y: self.r * root.cell;
+            width: root.cell;
+            height: root.cell;
+            background: (!self.reserved && mod(self.r * 7 + self.c * 13 + self.r * self.c, 5) < 2)
+                ? #0a0a18
+                : #ffffff;
+        }
+
+        // burchak nishonlari
+        for f in 3: Rectangle {
+            x: f == 1 ? root.cell * 14 : 0px;
+            y: f == 2 ? root.cell * 14 : 0px;
+            width: root.cell * 7;
+            height: self.width;
+            background: #0a0a18;
+
+            Rectangle {
+                width: root.cell * 5;
+                height: self.width;
+                background: #ffffff;
+
+                Rectangle {
+                    width: root.cell * 3;
+                    height: self.width;
+                    background: #0a0a18;
+                }
+            }
+        }
+    }
+}
+
+// Pastdagi navigatsiya paneli. Element ro'yxati tashqaridan beriladi —
+// tashrif buyuruvchida 6 ta, sotuvchida 4 ta tab bor.
+export component CkTabBar inherits Rectangle {
+    in-out property <int> current: 0;
+
+    in property <[CkAction]> items: [
+        { icon: CkIcons.home, label: "BOSH", tint: #00e5ff },
+        { icon: CkIcons.calendar, label: "TADBIR", tint: #00e5ff },
+        { icon: CkIcons.wallet, label: "HAMYON", tint: #00e5ff },
+        { icon: CkIcons.shop, label: "DO'KON", tint: #00e5ff },
+        { icon: CkIcons.profile, label: "PROFIL", tint: #00e5ff },
+        { icon: CkIcons.map-pin, label: "XARITA", tint: #00e5ff },
+    ];
+
+    height: 60px;
+    border-radius: Ck.r-lg;
+    border-width: 1px;
+    border-color: Ck.line-strong;
+    // CSS'da yarim shaffof fon + backdrop-blur edi. Slint'da blur yo'q,
+    // blursiz shaffoflik orqadagi kartani sizib ko'rsatadi — shuning uchun
+    // fon to'liq qorong'i.
+    background: Ck.bg1;
+
+    // Faol tabni ko'rsatuvchi, suriladigan tanlov. Tab almashganda sakrab
+    // emas, sirg'anib boradi — panelning o'zi harakatni ko'rsatib turadi.
+    Rectangle {
+        // tanlov katak ichida 4px chekinadi. Katak kengligi shu yerda
+        // hisoblanadi: alohida xossaga chiqarilsa layout bilan halqa hosil
+        // bo'ladi (`cell.width` → `layoutinfo-h` → o'sha xossa).
+        x: root.current * (root.width / max(root.items.length, 1)) + 4px;
+        y: 4px;
+        width: root.width / max(root.items.length, 1) - 8px;
+        height: parent.height - 8px;
+        border-radius: Ck.r-md;
+        background: Ck.cyan.transparentize(0.93);
+        border-width: 1px;
+        border-color: Ck.cyan.transparentize(0.85);
+        animate x {
+            duration: 340ms;
+            easing: ease-out-quint;
+        }
+    }
+
+    HorizontalLayout {
+        for item[index] in root.items: cell := Rectangle {
+            // Kenglik aniq beriladi. `horizontal-stretch: 1` yetmaydi: layout
+            // avval har bir katakka o'z yozuvining tabiiy kengligini beradi va
+            // faqat ortib qolgan joyni teng bo'ladi — natijada uzun yozuvli
+            // katak kengroq bo'lib qoladi va suriladigan tanlov ular bilan mos
+            // tushmaydi.
+            width: root.width / max(root.items.length, 1);
+
+            property <bool> on: root.current == index;
+
+            TouchArea {
+                clicked => {
+                    root.current = index;
+                }
+            }
+
+            VerticalLayout {
+                alignment: center;
+                spacing: 3px;
+
+                HorizontalLayout {
+                    alignment: center;
+                    CkIcon {
+                        commands: item.icon;
+                        size: 20px;
+                        tint: cell.on ? item.tint : Ck.text-mute;
+                    }
+                }
+
+                Text {
+                    text: item.label;
+                    color: cell.on ? item.tint : Ck.text-mute;
+                    font-family: Ck.mono;
+                    font-size: 8px;
+                    letter-spacing: 0.5px;
+                    horizontal-alignment: center;
+                    overflow: elide;
+                    animate color { duration: 180ms; easing: ease-out; }
+                }
+            }
+        }
+    }
+}
+
+// Google bilan davom etish tugmasi — oq fon, Google "G" belgisi.
+export component CkGoogleButton inherits Rectangle {
+    in property <string> text: "Google bilan davom etish";
+
+    callback clicked();
+
+    height: 52px;
+    border-radius: 14px;
+    background: touch.pressed ? #e8eaed : #ffffff;
+    animate background { duration: 120ms; }
+    drop-shadow-blur: 8px;
+    drop-shadow-color: #00000040;
+
+    touch := TouchArea {
+        clicked => {
+            root.clicked();
+        }
+    }
+
+    HorizontalLayout {
+        alignment: center;
+        spacing: 12px;
+
+        // Google "G" — oq doiradagi ko'k harf (soddalashtirilgan belgi).
+        VerticalLayout {
+            alignment: center;
+            Rectangle {
+                width: 26px;
+                height: 26px;
+                border-radius: 6px;
+                background: #ffffff;
+
+                Text {
+                    text: "G";
+                    color: #4285f4;
+                    font-family: Ck.sans;
+                    font-size: 22px;
+                    font-weight: 700;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                }
+            }
+        }
+
+        Text {
+            text: root.text;
+            color: #1f1f1f;
+            font-family: Ck.sans;
+            font-size: 15px;
+            font-weight: 600;
+            vertical-alignment: center;
+        }
+    }
+}
+
+// ── 3D XARITA KO'PRIGI (Rust ↔ Slint) ───────────────────────────────────────
+// Rust software renderer `scene` rasmiga tadbir maydonini 3D chizadi. UI yaw/
+// pitch'ni (barmoq bilan burish) o'zgartirib `refresh()` chaqiradi; Rust qayta
+// render qiladi. `selected` — ajratilgan bino (ro'yxat bilan sinxron).
+// Ro'yxatdan o'tish va kirish mantig'i Rust tomonda — `src/auth.rs`.
+// UI faqat shu globalga murojaat qiladi, tekshiruvni o'zi o'ylab topmaydi.
+export global Auth {
+    // Joriy hisob — muvaffaqiyatli ro'yxat/kirishdan keyin Rust to'ldiradi.
+    in-out property <string> account-name;
+    in-out property <string> account-first;
+    in-out property <string> account-email;
+    in-out property <string> account-workplace;
+    // Avatar uchun ism-familiyaning bosh harflari (Rust hisoblaydi).
+    in-out property <string> account-initials;
+
+    // Maydon tekshiruvlari. Binding ichida chaqilgani uchun `pure`.
+    pure callback email-ok(email: string) -> bool;
+    pure callback name-ok(name: string) -> bool;
+    // Parol kuchi 0..4.
+    pure callback password-score(password: string) -> int;
+
+    // Amallar: "" — muvaffaqiyat, aks holda foydalanuvchiga ko'rsatiladigan xato.
+    callback register(email: string, name: string, workplace: string, password: string, google: bool) -> string;
+    callback login(email: string, password: string) -> string;
+    callback google-login(email: string) -> string;
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// Store — CyberAqcha iqtisodi. Haqiqat manbai Rust'da (src/lib.rs `wire_store`).
+// Balans, kirim/chiqim shu yerda; xarid/mukofot Rust orqali o'zgaradi.
+// ───────────────────────────────────────────────────────────────────────────
+export global Store {
+    in-out property <int> balance: 155;
+    in-out property <int> earned: 275;
+    in-out property <int> spent: 120;
+
+    // Butun sonni "1,250" ko'rinishida formatlaydi (Rust).
+    pure callback money(int) -> string;
+    // Narxni balansdan yechadi (balans yetsa) — true = muvaffaqiyat.
+    callback buy(price: int) -> bool;
+    // Mukofot qo'shadi (topshiriq/o'yin/checkpoint).
+    callback reward(amount: int);
+}
+
+// Faqat ishlab chiqish vositasi uchun: `examples/shots.rs` aylanadigan
+// sahifalarni bo'lak-bo'lak rasmga olishi uchun siljish. Odatda 0 — bu holda
+// hech narsaga ta'sir qilmaydi (Flickable ham 0'dan boshlaydi), foydalanuvchi
+// barmog'i bilan surganda esa bog'lanish o'rnini oddiy qiymat oladi.
+export global CkDebug {
+    in-out property <length> scroll: 0px;
+}
+
+// Xona yorlig'i (pill) ankeri — Rust proyeksiyadan keladi (0..1 nisbatda).
+export struct CkMapLabel {
+    x: float,
+    y: float,
+    code: string,
+    name: string,
+    tint: color,
+    entrance: bool,
+}
+
+export global Map3D {
+    in property <image> scene;
+    // Aylanish (radian). 0 — Flutter'dagi standart ko'rinish.
+    in-out property <float> yaw: 0.0;
+    in-out property <float> pitch: 0.0;
+    // Tanlangan xona (marshrut). -1 — tanlanmagan.
+    in-out property <int> selected: -1;
+    in property <[CkMapLabel]> labels;
+    callback refresh();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MA'LUMOT KO'RSATISH BLOKLARI
+//
+// Diagrammalar sof Slint'da, faqat to'rtburchaklardan yasalgan — GPU shader
+// yoki Path kerak emas, shuning uchun Android'da ham bir xil chiziladi.
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Mini ustunli grafik. Oxirgi ustun yorqin — "hozirgi" qiymat.
+export component CkSparkline inherits Rectangle {
+    in property <[float]> values: [0.35, 0.5, 0.42, 0.68, 0.55, 0.82, 0.95];
+    in property <color> tint: Ck.cyan;
+    in property <length> gap: 5px;
+    in property <bool> highlight-last: true;
+
+    height: 46px;
+
+    for v[i] in root.values: Rectangle {
+        width: (root.width - (root.values.length - 1) * root.gap) / root.values.length;
+        x: (self.width + root.gap) * i;
+        height: max(4px, root.height * v);
+        y: root.height - self.height;
+        border-radius: 3px;
+        background: (root.highlight-last && i == root.values.length - 1)
+            ? @linear-gradient(180deg, root.tint, root.tint.transparentize(0.55))
+            : root.tint.transparentize(0.72);
+    }
+}
+
+// Yozuvli gorizontal ustunlar (haftalik faollik, sotuv va h.k.).
+export struct CkBar {
+    label: string,
+    value: float,
+    text: string,
+    tint: color,
+}
+
+export component CkBars inherits VerticalLayout {
+    in property <[CkBar]> bars;
+    in property <length> row-height: 26px;
+
+    spacing: 8px;
+
+    for b in root.bars: HorizontalLayout {
+        spacing: 10px;
+        height: root.row-height;
+
+        Text {
+            width: 34px;
+            text: b.label;
+            color: Ck.text-mute;
+            font-family: Ck.mono;
+            font-size: 10px;
+            vertical-alignment: center;
+        }
+
+        Rectangle {
+            horizontal-stretch: 1;
+            border-radius: 6px;
+            background: Ck.bg2;
+
+            Rectangle {
+                x: 0;
+                width: max(6px, parent.width * b.value);
+                height: parent.height;
+                border-radius: 6px;
+                background: @linear-gradient(90deg, b.tint.transparentize(0.35), b.tint);
+                animate width { duration: 500ms; easing: ease-out-quint; }
+            }
+        }
+
+        Text {
+            width: 52px;
+            text: b.text;
+            color: Ck.text;
+            font-family: Ck.mono;
+            font-size: 11px;
+            horizontal-alignment: right;
+            vertical-alignment: center;
+        }
+    }
+}
+
+// Halqa ko'rinishidagi progress — nuqtalardan yasalgan, markazida @children.
+export component CkRing inherits Rectangle {
+    in property <float> value: 0.68;
+    in property <int> dots: 32;
+    in property <color> tint: Ck.cyan;
+    in property <length> ring: 96px;
+    in property <length> dot: 5px;
+
+    width: root.ring;
+    height: root.ring;
+
+    for i in root.dots: Rectangle {
+        property <float> t: (i * 1.0) / root.dots;
+        width: root.dot;
+        height: root.dot;
+        border-radius: root.dot / 2;
+        x: root.ring / 2 - self.width / 2 + (root.ring / 2 - root.dot) * Math.sin(self.t * 360deg);
+        y: root.ring / 2 - self.height / 2 - (root.ring / 2 - root.dot) * Math.cos(self.t * 360deg);
+        background: self.t < root.value ? root.tint : Ck.line-strong;
+    }
+
+    @children
+}
+
+// To'ldirilganlik ko'rsatkichi (joylar, ombor, maqsad).
+export component CkMeter inherits VerticalLayout {
+    in property <string> label;
+    in property <string> value-text;
+    in property <float> value: 0.6;
+    in property <color> tint: Ck.cyan;
+
+    spacing: 6px;
+
+    if root.label != "" || root.value-text != "": HorizontalLayout {
+        Text {
+            text: root.label;
+            color: Ck.text-dim;
+            font-family: Ck.mono;
+            font-size: 9px;
+            letter-spacing: 1.2px;
+        }
+        Rectangle { horizontal-stretch: 1; }
+        Text {
+            text: root.value-text;
+            color: root.tint;
+            font-family: Ck.mono;
+            font-size: 10px;
+        }
+    }
+
+    Rectangle {
+        height: 6px;
+        border-radius: 3px;
+        background: Ck.bg2;
+
+        Rectangle {
+            x: 0;
+            width: max(4px, parent.width * min(1.0, root.value));
+            height: parent.height;
+            border-radius: 3px;
+            background: @linear-gradient(90deg, root.tint.transparentize(0.4), root.tint);
+            animate width { duration: 460ms; easing: ease-out-quint; }
+        }
+    }
+}
+
+// Ustma-ust tushgan avatarlar + qolganlar soni.
+export component CkAvatarStack inherits Rectangle {
+    in property <[string]> initials;
+    in property <[color]> tints: [#00e5ff, #ff2d95, #7c4dff, #5bffc2];
+    in property <int> extra: 0;
+    in property <length> av: 26px;
+
+    height: root.av;
+    width: root.av + (root.initials.length - 1) * (root.av * 0.68)
+        + (root.extra > 0 ? root.av * 0.78 : 0px);
+
+    for n[i] in root.initials: Rectangle {
+        x: (root.av * 0.68) * i;
+        width: root.av;
+        height: root.av;
+        border-radius: root.av / 2;
+        border-width: 2px;
+        border-color: Ck.bg0;
+        background: root.tints[mod(i, root.tints.length)];
+
+        Text {
+            text: n;
+            color: #06060f;
+            font-family: Ck.sans;
+            font-size: root.av / 2.4;
+            font-weight: 700;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+        }
+    }
+
+    if root.extra > 0: Rectangle {
+        x: (root.av * 0.68) * root.initials.length;
+        width: root.av;
+        height: root.av;
+        border-radius: root.av / 2;
+        border-width: 2px;
+        border-color: Ck.bg0;
+        background: Ck.bg3;
+
+        Text {
+            text: "+" + root.extra;
+            color: Ck.text-dim;
+            font-family: Ck.mono;
+            font-size: root.av / 2.6;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+        }
+    }
+}
+
+// Gorizontal aylanadigan tasma (tez amallar, yangiliklar, hikoyalar).
+export component CkRail inherits Flickable {
+    in property <length> content-width;
+
+    viewport-width: root.content-width;
+    viewport-height: self.height;
+    interactive: true;
+
+    @children
+}
+
+// Yuklanish paytidagi "skelet" blok.
+export component CkSkeleton inherits Rectangle {
+    in property <bool> running: true;
+
+    border-radius: 8px;
+    background: Ck.bg2;
+
+    Rectangle {
+        x: shine.x;
+        width: parent.width / 3;
+        height: parent.height;
+        background: @linear-gradient(90deg,
+            #ffffff00 0%,
+            Ck.line 50%,
+            #ffffff00 100%);
+
+        shine := Rectangle {
+            width: 0;
+            height: 0;
+            x: -parent.width;
+            animate x {
+                duration: 1200ms;
+                iteration-count: -1;
+                easing: linear;
+            }
+        }
+    }
+}
+
+// Reyting yulduzlari.
+export component CkStars inherits HorizontalLayout {
+    in property <float> value: 4.0;
+    in property <length> size: 13px;
+    in property <color> tint: Ck.amber;
+
+    spacing: 2px;
+
+    for i in 5: CkIcon {
+        commands: CkIcons.star;
+        size: root.size;
+        tint: (i * 1.0) < root.value ? root.tint : Ck.line-strong;
+    }
+}
+
+// Kichik ko'rsatkich plitkasi (KPI).
+export component CkKpi inherits Rectangle {
+    in property <string> label;
+    in property <string> value;
+    in property <string> delta;
+    in property <string> icon;
+    in property <color> tint: Ck.cyan;
+
+    border-radius: Ck.r-md;
+    border-width: 1px;
+    border-color: Ck.line;
+    background: Ck.bg1;
+    height: box.preferred-height + 24px;
+
+    box := VerticalLayout {
+        padding: 12px;
+        spacing: 4px;
+
+        HorizontalLayout {
+            spacing: 6px;
+
+            if root.icon != "": CkIconSlot {
+                commands: root.icon;
+                size: 13px;
+                tint: root.tint;
+            }
+
+            Text {
+                text: root.label;
+                color: Ck.text-dim;
+                font-family: Ck.mono;
+                font-size: 9px;
+                letter-spacing: 1.1px;
+                vertical-alignment: center;
+                overflow: elide;
+            }
+        }
+
+        Text {
+            text: root.value;
+            color: Ck.text;
+            font-family: Ck.sans;
+            font-size: 19px;
+            font-weight: 700;
+        }
+
+        if root.delta != "": Text {
+            text: root.delta;
+            color: root.tint;
+            font-family: Ck.mono;
+            font-size: 10px;
+        }
+    }
+}
+
+// Reyting qatori (leaderboard).
+export component CkLeaderRow inherits Rectangle {
+    in property <int> rank: 1;
+    in property <string> name;
+    in property <string> sub;
+    in property <string> score;
+    in property <string> initials;
+    in property <color> tint: Ck.cyan;
+    in property <bool> me: false;
+
+    callback clicked();
+
+    height: 62px;
+    border-radius: Ck.r-md;
+    border-width: 1px;
+    border-color: root.me ? Ck.cyan.transparentize(0.6) : Ck.line;
+    background: root.me ? Ck.cyan.transparentize(0.92) : (touch.pressed ? Ck.bg3 : Ck.bg1);
+    animate background { duration: 120ms; }
+
+    touch := TouchArea {
+        clicked => {
+            root.clicked();
+        }
+    }
+
+    HorizontalLayout {
+        padding-left: 12px;
+        padding-right: 14px;
+        spacing: 10px;
+
+        VerticalLayout {
+            alignment: center;
+            width: 26px;
+            Text {
+                text: root.rank;
+                color: root.rank <= 3 ? Ck.amber : Ck.text-mute;
+                font-family: Ck.mono;
+                font-size: root.rank <= 3 ? 15px : 13px;
+                font-weight: root.rank <= 3 ? 700 : 400;
+                horizontal-alignment: center;
+            }
+        }
+
+        VerticalLayout {
+            alignment: center;
+            Rectangle {
+                width: 36px;
+                height: 36px;
+                border-radius: 18px;
+                background: @linear-gradient(135deg, root.tint, root.tint.transparentize(0.55));
+                Text {
+                    text: root.initials;
+                    color: #06060f;
+                    font-family: Ck.sans;
+                    font-size: 14px;
+                    font-weight: 700;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                }
+            }
+        }
+
+        VerticalLayout {
+            horizontal-stretch: 1;
+            alignment: center;
+            spacing: 2px;
+
+            Text {
+                text: root.name;
+                color: Ck.text;
+                font-family: Ck.sans;
+                font-size: 14px;
+                font-weight: 600;
+                overflow: elide;
+            }
+
+            Text {
+                text: root.sub;
+                color: Ck.text-mute;
+                font-family: Ck.sans;
+                font-size: 11px;
+                overflow: elide;
+            }
+        }
+
+        VerticalLayout {
+            alignment: center;
+            Text {
+                text: root.score;
+                color: root.me ? Ck.cyan : Ck.text;
+                font-family: Ck.mono;
+                font-size: 13px;
+                font-weight: 600;
+            }
+        }
+    }
+}
+
+// Yutuq nishoni (ochilgan / yopiq).
+export component CkAchievement inherits Rectangle {
+    in property <string> icon;
+    in property <string> label;
+    in property <bool> earned: true;
+    in property <color> tint: Ck.amber;
+
+    width: 82px;
+    height: 100px;
+    border-radius: Ck.r-md;
+    border-width: 1px;
+    border-color: root.earned ? root.tint.transparentize(0.65) : Ck.line;
+    background: root.earned ? root.tint.transparentize(0.9) : Ck.bg1;
+
+    VerticalLayout {
+        padding: 8px;
+        spacing: 6px;
+        alignment: center;
+
+        HorizontalLayout {
+            alignment: center;
+            Rectangle {
+                width: 42px;
+                height: 42px;
+                border-radius: 21px;
+                background: root.earned
+                    ? @linear-gradient(135deg, root.tint, root.tint.transparentize(0.5))
+                    : Ck.bg3;
+                CkIcon {
+                    commands: root.earned ? root.icon : CkIcons.lock;
+                    size: 20px;
+                    tint: root.earned ? #06060f : Ck.text-mute;
+                }
+            }
+        }
+
+        Text {
+            text: root.label;
+            color: root.earned ? Ck.text : Ck.text-mute;
+            font-family: Ck.sans;
+            font-size: 10px;
+            font-weight: 600;
+            horizontal-alignment: center;
+            wrap: word-wrap;
+        }
+    }
+}
+
+// Vaqt jadvali qatori — chapda vaqt, o'ngda voqea.
+export component CkTimelineRow inherits Rectangle {
+    in property <string> time;
+    in property <string> title;
+    in property <string> sub;
+    in property <color> tint: Ck.cyan;
+    in property <bool> now: false;
+    in property <bool> last: false;
+
+    callback clicked();
+
+    height: 74px;
+
+    TouchArea {
+        clicked => {
+            root.clicked();
+        }
+    }
+
+    HorizontalLayout {
+        spacing: 12px;
+
+        VerticalLayout {
+            width: 46px;
+            padding-top: 10px;
+            Text {
+                text: root.time;
+                color: root.now ? root.tint : Ck.text-mute;
+                font-family: Ck.mono;
+                font-size: 11px;
+                font-weight: root.now ? 700 : 400;
+                horizontal-alignment: right;
+            }
+        }
+
+        // Chiziq va nuqta.
+        Rectangle {
+            width: 12px;
+
+            if !root.last: Rectangle {
+                x: 5px;
+                y: 14px;
+                width: 1px;
+                height: parent.height - 10px;
+                background: Ck.line;
+            }
+
+            Rectangle {
+                x: 1px;
+                y: 10px;
+                width: 10px;
+                height: 10px;
+                border-radius: 5px;
+                border-width: root.now ? 0px : 1px;
+                border-color: Ck.line-strong;
+                background: root.now ? root.tint : Ck.bg2;
+            }
+
+            if root.now: Rectangle {
+                x: -3px;
+                y: 6px;
+                width: 18px;
+                height: 18px;
+                border-radius: 9px;
+                background: root.tint.transparentize(0.75);
+            }
+        }
+
+        VerticalLayout {
+            horizontal-stretch: 1;
+            padding-top: 4px;
+            padding-bottom: 12px;
+            spacing: 3px;
+
+            Text {
+                text: root.title;
+                color: Ck.text;
+                font-family: Ck.sans;
+                font-size: 14px;
+                font-weight: 600;
+                overflow: elide;
+            }
+
+            Text {
+                text: root.sub;
+                color: Ck.text-dim;
+                font-family: Ck.sans;
+                font-size: 11px;
+                overflow: elide;
+            }
+        }
+    }
+}
+
+// Reklama / e'lon lavhasi.
+export component CkBanner inherits Rectangle {
+    in property <string> eyebrow;
+    in property <string> title;
+    in property <string> sub;
+    in property <string> icon;
+    in property <color> tint: Ck.purple;
+    in property <color> tint2: Ck.cyan;
+
+    callback clicked();
+
+    height: 96px;
+    border-radius: Ck.r-md;
+    background: @linear-gradient(120deg, root.tint.transparentize(0.78), root.tint2.transparentize(0.86));
+    border-width: 1px;
+    border-color: root.tint.transparentize(0.6);
+    opacity: touch.pressed ? 0.85 : 1.0;
+    animate opacity { duration: 110ms; }
+
+    touch := TouchArea {
+        clicked => {
+            root.clicked();
+        }
+    }
+
+    HorizontalLayout {
+        padding: 14px;
+        spacing: 12px;
+
+        VerticalLayout {
+            alignment: center;
+            Rectangle {
+                width: 46px;
+                height: 46px;
+                border-radius: 14px;
+                background: @linear-gradient(135deg, root.tint2, root.tint);
+                CkIcon {
+                    commands: root.icon;
+                    size: 22px;
+                    tint: #06060f;
+                }
+            }
+        }
+
+        VerticalLayout {
+            horizontal-stretch: 1;
+            alignment: center;
+            spacing: 3px;
+
+            if root.eyebrow != "": Text {
+                text: root.eyebrow;
+                color: root.tint2;
+                font-family: Ck.mono;
+                font-size: 9px;
+                letter-spacing: 1.3px;
+            }
+
+            Text {
+                text: root.title;
+                color: Ck.text;
+                font-family: Ck.sans;
+                font-size: 15px;
+                font-weight: 700;
+                overflow: elide;
+            }
+
+            Text {
+                text: root.sub;
+                color: Ck.text-dim;
+                font-family: Ck.sans;
+                font-size: 11px;
+                wrap: word-wrap;
+            }
+        }
+
+        VerticalLayout {
+            alignment: center;
+            CkIcon {
+                commands: CkIcons.chev-r;
+                size: 16px;
+                tint: Ck.text-dim;
+            }
+        }
+    }
+}

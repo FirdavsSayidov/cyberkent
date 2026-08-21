@@ -1,0 +1,790 @@
+// ═══════════════════════════════════════════════════════════════════════════
+// CYBERQUIZ — bosh sahifa, mening testlarim, test muharriri, kod skaneri,
+// natija ekrani.
+//
+// Manba: StudioProjects/cyberkent/lib/features/cyberquiz/*.
+// ═══════════════════════════════════════════════════════════════════════════
+
+import {
+    Ck, CkIcons,
+    CkIcon, CkIconSlot, CkIconButton, CkBadge, CkCoin,
+    CkCard, CkCardFlat, CkHeroCard, CkStat, CkDivider,
+    CkPrimaryButton, CkSecondaryButton, CkGhostButton, CkField,
+    CkNavBar, CkScroll, CkScanFrame, CkListRow, CkEmpty,
+} from "ck-common.slint";
+
+export struct CkQuizTest {
+    title: string,
+    questions: string,
+    plays: string,
+    tint: color,
+}
+
+// ── BOSH SAHIFA ─────────────────────────────────────────────────────────────
+
+export component QuizPage inherits Rectangle {
+    // ── Flutter `cyberquiz/cyberquiz_screen.dart` bilan 1:1 ──
+    // NavBar (orqaga + "Cyber Quiz") → hero (kubok, "Cyber Quiz",
+    // "Bilimingizni sinab ko'ring va sovg'alarni yutib oling!") →
+    // "Cyber Quiz nima?" izoh kartasi → "Qanday ishlaydi?" 3 qadam →
+    // "Sovg'alar" → "Davom etish" (QR) tugmasi.
+    background: transparent;
+
+    callback back();
+    callback scan();
+    callback tests();
+
+    CkScroll {
+        // NavBar (oddiy sarlavha).
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-top: 12px;
+            padding-bottom: 10px;
+            spacing: 16px;
+
+            VerticalLayout {
+                alignment: center;
+                CkIconButton {
+                    icon: CkIcons.chev-l;
+                    clicked => {
+                        root.back();
+                    }
+                }
+            }
+
+            Text {
+                text: "Cyber Quiz";
+                color: Ck.text;
+                font-family: Ck.sans;
+                font-size: 26px;
+                font-weight: 700;
+                vertical-alignment: center;
+            }
+        }
+
+        // ── HERO ────────────────────────────────────────────────────────
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+
+            CkHeroCard {
+                interactive: false;
+
+                VerticalLayout {
+                    padding: 20px;
+                    spacing: 12px;
+
+                    HorizontalLayout {
+                        alignment: start;
+                        Rectangle {
+                            width: 84px;
+                            height: 84px;
+                            border-radius: 24px;
+                            border-width: 1px;
+                            border-color: Ck.cyan.transparentize(0.4);
+                            background: @linear-gradient(135deg, #4a90e2, #7c4dff);
+
+                            CkIcon {
+                                commands: CkIcons.trophy;
+                                size: 38px;
+                                tint: #0a0a18;
+                            }
+                        }
+                    }
+
+                    Text {
+                        text: "Cyber Quiz";
+                        color: Ck.text;
+                        font-family: Ck.sans;
+                        font-size: 32px;
+                        font-weight: 700;
+                    }
+
+                    Text {
+                        text: "Bilimingizni sinab ko'ring va sovg'alarni yutib oling!";
+                        color: Ck.text-dim;
+                        font-family: Ck.sans;
+                        font-size: 16px;
+                        wrap: word-wrap;
+                    }
+                }
+            }
+        }
+
+        // ── CYBER QUIZ NIMA? ────────────────────────────────────────────
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-top: 18px;
+            padding-bottom: 10px;
+            spacing: 10px;
+
+            VerticalLayout {
+                alignment: center;
+                CkIcon {
+                    commands: CkIcons.info;
+                    size: 20px;
+                    tint: Ck.cyan;
+                }
+            }
+
+            Text {
+                text: "Cyber Quiz nima?";
+                color: Ck.text;
+                font-family: Ck.sans;
+                font-size: 20px;
+                font-weight: 700;
+                vertical-alignment: center;
+            }
+        }
+
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+
+            CkCardFlat {
+                interactive: false;
+
+                VerticalLayout {
+                    padding: 18px;
+
+                    Text {
+                        text: "Kiberxavfsizlik bo'yicha qiziqarli savollar musobaqasi. To'g'ri javob bering, reytingda yuqoriga ko'tariling va sovrinlarni qo'lga kiriting.";
+                        color: Ck.text-dim;
+                        font-family: Ck.sans;
+                        font-size: 16px;
+                        wrap: word-wrap;
+                    }
+                }
+            }
+        }
+
+        // ── QANDAY ISHLAYDI? ────────────────────────────────────────────
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-top: 18px;
+            padding-bottom: 10px;
+            spacing: 10px;
+
+            VerticalLayout {
+                alignment: center;
+                CkIcon {
+                    commands: CkIcons.trend;
+                    size: 20px;
+                    tint: Ck.cyan;
+                }
+            }
+
+            Text {
+                text: "Qanday ishlaydi?";
+                color: Ck.text;
+                font-family: Ck.sans;
+                font-size: 20px;
+                font-weight: 700;
+                vertical-alignment: center;
+            }
+        }
+
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+
+            CkCardFlat {
+                interactive: false;
+
+                VerticalLayout {
+                    padding: 18px;
+                    spacing: 16px;
+
+                    for st[i] in [
+                        "E5 — Cyber Quiz stendiga boring",
+                        "\"Davom etish\"ni bosib stenddagi QR kodni skanerlang",
+                        "Savollarga javob bering va sovg'alarni yutib oling",
+                    ]: HorizontalLayout {
+                        spacing: 14px;
+
+                        VerticalLayout {
+                            alignment: start;
+                            Rectangle {
+                                width: 34px;
+                                height: 34px;
+                                border-radius: 17px;
+                                border-width: 1px;
+                                border-color: Ck.cyan.transparentize(0.5);
+                                background: Ck.cyan.transparentize(0.9);
+
+                                Text {
+                                    text: i + 1;
+                                    color: Ck.cyan;
+                                    font-family: Ck.mono;
+                                    font-size: 14px;
+                                    font-weight: 700;
+                                    horizontal-alignment: center;
+                                    vertical-alignment: center;
+                                }
+                            }
+                        }
+
+                        Text {
+                            text: st;
+                            color: Ck.text-dim;
+                            font-family: Ck.sans;
+                            font-size: 16px;
+                            wrap: word-wrap;
+                            vertical-alignment: center;
+                            horizontal-stretch: 1;
+                        }
+                    }
+                }
+            }
+        }
+
+        // ── SOVG'ALAR ───────────────────────────────────────────────────
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-top: 18px;
+            padding-bottom: 10px;
+            spacing: 10px;
+
+            VerticalLayout {
+                alignment: center;
+                CkIcon {
+                    commands: CkIcons.gift;
+                    size: 20px;
+                    tint: Ck.amber;
+                }
+            }
+
+            Text {
+                text: "Sovg'alar";
+                color: Ck.text;
+                font-family: Ck.sans;
+                font-size: 20px;
+                font-weight: 700;
+                vertical-alignment: center;
+            }
+        }
+
+        // ── DAVOM ETISH ─────────────────────────────────────────────────
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-top: 8px;
+
+            Rectangle {
+                height: 56px;
+                border-radius: 18px;
+                background: @linear-gradient(135deg, #00e5ff, #7c4dff);
+                opacity: go.pressed ? 0.85 : 1.0;
+                animate opacity { duration: 110ms; }
+
+                go := TouchArea {
+                    clicked => {
+                        root.scan();
+                    }
+                }
+
+                HorizontalLayout {
+                    alignment: center;
+                    spacing: 10px;
+
+                    VerticalLayout {
+                        alignment: center;
+                        CkIcon {
+                            commands: CkIcons.qr;
+                            size: 18px;
+                            tint: Ck.bg1;
+                        }
+                    }
+
+                    Text {
+                        text: "Davom etish";
+                        color: Ck.bg1;
+                        font-family: Ck.sans;
+                        font-size: 17px;
+                        font-weight: 700;
+                        vertical-alignment: center;
+                    }
+                }
+            }
+        }
+    }
+}
+
+export component QuizTestsPage inherits Rectangle {
+    background: transparent;
+
+    in property <[CkQuizTest]> tests: [
+        { title: "Cyber xavfsizlik asoslari", questions: "10 savol", plays: "128 o'yin", tint: #00e5ff },
+        { title: "Dasturlash tarixi", questions: "8 savol", plays: "64 o'yin", tint: #7c4dff },
+        { title: "AI va kelajak", questions: "12 savol", plays: "39 o'yin", tint: #ff2d95 },
+    ];
+
+    callback back();
+    callback create();
+    callback test-clicked(index: int);
+
+    VerticalLayout {
+        padding-top: Ck.safe-top;
+
+        CkNavBar {
+            vertical-stretch: 0;
+            eyebrow: "CYBERQUIZ";
+            title: "Mening testlarim";
+            back => {
+                root.back();
+            }
+
+            VerticalLayout {
+                alignment: center;
+                CkIconButton {
+                    icon: CkIcons.plus;
+                    tint: Ck.cyan;
+                    clicked => {
+                        root.create();
+                    }
+                }
+            }
+        }
+
+        Rectangle {
+            vertical-stretch: 1;
+
+            Flickable {
+                width: 100%;
+                height: parent.height - Ck.safe-bottom;
+                viewport-width: self.width;
+                viewport-height: list.preferred-height;
+
+                list := VerticalLayout {
+                    width: root.width;
+                    alignment: start;
+                    padding-left: 20px;
+                    padding-right: 20px;
+                    padding-top: 6px;
+                    padding-bottom: 20px;
+                    spacing: 10px;
+
+                    CkPrimaryButton {
+                        text: "Yangi test yaratish";
+                        icon: CkIcons.plus;
+                        clicked => {
+                            root.create();
+                        }
+                    }
+
+                    for t[index] in root.tests: CkCard {
+                        clicked => {
+                            root.test-clicked(index);
+                        }
+
+                        HorizontalLayout {
+                            padding: 14px;
+                            spacing: 12px;
+
+                            VerticalLayout {
+                                alignment: center;
+                                Rectangle {
+                                    width: 44px;
+                                    height: 44px;
+                                    border-radius: 14px;
+                                    background: t.tint.transparentize(0.86);
+
+                                    CkIcon {
+                                        commands: CkIcons.book;
+                                        size: 22px;
+                                        tint: t.tint;
+                                    }
+                                }
+                            }
+
+                            VerticalLayout {
+                                horizontal-stretch: 1;
+                                alignment: center;
+                                spacing: 3px;
+
+                                Text {
+                                    text: t.title;
+                                    color: Ck.text;
+                                    font-family: Ck.sans;
+                                    font-size: 14px;
+                                    font-weight: 600;
+                                    overflow: elide;
+                                }
+
+                                Text {
+                                    text: t.questions + " · " + t.plays;
+                                    color: Ck.text-dim;
+                                    font-family: Ck.mono;
+                                    font-size: 11px;
+                                    overflow: elide;
+                                }
+                            }
+
+                            CkIconSlot {
+                                commands: CkIcons.chev-r;
+                                size: 16px;
+                                tint: Ck.text-mute;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ── TEST MUHARRIRI ──────────────────────────────────────────────────────────
+
+export component QuizEditorPage inherits Rectangle {
+    background: transparent;
+
+    in-out property <string> test-title;
+    in-out property <string> question;
+    in-out property <string> option-a;
+    in-out property <string> option-b;
+    in-out property <string> option-c;
+    in-out property <string> option-d;
+    in-out property <int> correct: 0;
+
+    callback back();
+    callback saved();
+
+    VerticalLayout {
+        padding-top: Ck.safe-top;
+
+        CkNavBar {
+            vertical-stretch: 0;
+            eyebrow: "CYBERQUIZ";
+            title: "Test muharriri";
+            back => {
+                root.back();
+            }
+        }
+
+        Flickable {
+            vertical-stretch: 1;
+            viewport-width: self.width;
+            viewport-height: col.preferred-height;
+
+            col := VerticalLayout {
+                width: parent.width;
+                alignment: start;
+                padding-left: 20px;
+                padding-right: 20px;
+                padding-bottom: Ck.safe-bottom + 20px;
+                spacing: 14px;
+
+                CkField {
+                    label: "TEST NOMI";
+                    placeholder: "Masalan: Cyber xavfsizlik";
+                    text <=> root.test-title;
+                }
+
+                CkField {
+                    label: "1-SAVOL";
+                    placeholder: "Savol matnini kiriting";
+                    text <=> root.question;
+                }
+
+                Text {
+                    text: "JAVOB VARIANTLARI · to'g'risini belgilang";
+                    color: Ck.text-dim;
+                    font-family: Ck.mono;
+                    font-size: 10px;
+                    letter-spacing: 1.4px;
+                }
+
+                // 4 ta variant — chap tomonda tanlash doirasi.
+                for opt[index] in [
+                    { label: "A", text: root.option-a },
+                    { label: "B", text: root.option-b },
+                    { label: "C", text: root.option-c },
+                    { label: "D", text: root.option-d },
+                ]: Rectangle {
+                    height: 52px;
+                    border-radius: 14px;
+                    border-width: 1px;
+                    border-color: root.correct == index ? Ck.mint.transparentize(0.5) : Ck.line;
+                    background: root.correct == index ? Ck.mint.transparentize(0.9) : Ck.bg2;
+
+                    HorizontalLayout {
+                        padding-left: 12px;
+                        padding-right: 14px;
+                        spacing: 10px;
+
+                        VerticalLayout {
+                            alignment: center;
+                            Rectangle {
+                                width: 30px;
+                                height: 30px;
+                                border-radius: 15px;
+                                border-width: 1px;
+                                border-color: root.correct == index ? Ck.mint : Ck.line-strong;
+                                background: root.correct == index ? Ck.mint.transparentize(0.8) : transparent;
+
+                                TouchArea {
+                                    clicked => {
+                                        root.correct = index;
+                                    }
+                                }
+
+                                Text {
+                                    text: opt.label;
+                                    color: root.correct == index ? Ck.mint : Ck.text-dim;
+                                    font-family: Ck.mono;
+                                    font-size: 13px;
+                                    font-weight: 700;
+                                    horizontal-alignment: center;
+                                    vertical-alignment: center;
+                                }
+                            }
+                        }
+
+                        Text {
+                            text: opt.text == "" ? (opt.label + " varianti") : opt.text;
+                            color: opt.text == "" ? Ck.text-mute : Ck.text;
+                            font-family: Ck.sans;
+                            font-size: 14px;
+                            vertical-alignment: center;
+                            overflow: elide;
+                        }
+                    }
+                }
+
+                CkPrimaryButton {
+                    text: "Testni saqlash";
+                    icon: CkIcons.check;
+                    clicked => {
+                        root.saved();
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ── KOD SKANERI ─────────────────────────────────────────────────────────────
+
+export component QuizScanPage inherits Rectangle {
+    background: #06060f;
+
+    in property <bool> active: true;
+
+    callback back();
+    callback joined();
+
+    VerticalLayout {
+        padding-top: Ck.safe-top;
+        padding-bottom: Ck.safe-bottom;
+
+        HorizontalLayout {
+            padding-left: 16px;
+            padding-right: 16px;
+            padding-top: 14px;
+            spacing: 8px;
+
+            CkIconButton {
+                icon: CkIcons.chev-l;
+                clicked => {
+                    root.back();
+                }
+            }
+
+            VerticalLayout {
+                horizontal-stretch: 1;
+                alignment: center;
+                Text {
+                    text: "QUIZ QR / PIN";
+                    color: #ffffff;
+                    font-family: Ck.mono;
+                    font-size: 12px;
+                    letter-spacing: 1.8px;
+                    horizontal-alignment: center;
+                }
+            }
+
+            Rectangle {
+                width: 36px;
+            }
+        }
+
+        VerticalLayout {
+            vertical-stretch: 1;
+            alignment: center;
+            spacing: 20px;
+
+            HorizontalLayout {
+                alignment: center;
+                CkScanFrame {
+                    size: 260px;
+                    tint: Ck.cyan;
+                    running: root.active;
+                }
+            }
+
+            Text {
+                text: "Ekrandagi QR kodni skanerlang";
+                color: #ffffffcc;
+                font-family: Ck.sans;
+                font-size: 14px;
+                horizontal-alignment: center;
+            }
+
+            Text {
+                text: "yoki PIN kodni kiriting";
+                color: #ffffff80;
+                font-family: Ck.sans;
+                font-size: 12px;
+                horizontal-alignment: center;
+            }
+        }
+
+        VerticalLayout {
+            padding-left: 24px;
+            padding-right: 24px;
+            padding-bottom: 8px;
+
+            CkPrimaryButton {
+                text: "Qo'shilish (demo)";
+                icon: CkIcons.arrow-r;
+                clicked => {
+                    root.joined();
+                }
+            }
+        }
+    }
+}
+
+// ── NATIJA ──────────────────────────────────────────────────────────────────
+
+export component QuizResultPage inherits Rectangle {
+    background: transparent;
+
+    in property <string> score: "8";
+    in property <string> total: "10";
+    in property <string> rank: "#3";
+    in property <string> reward: "+80";
+
+    callback done();
+
+    VerticalLayout {
+        padding-top: Ck.safe-top;
+        padding-bottom: Ck.safe-bottom;
+
+        VerticalLayout {
+            vertical-stretch: 1;
+            padding: 32px;
+            alignment: center;
+            spacing: 12px;
+
+            Text {
+                text: "QUIZ YAKUNLANDI";
+                color: Ck.cyan;
+                font-family: Ck.mono;
+                font-size: 10px;
+                letter-spacing: 1.8px;
+                horizontal-alignment: center;
+            }
+
+            HorizontalLayout {
+                alignment: center;
+                padding-top: 8px;
+                padding-bottom: 8px;
+
+                Rectangle {
+                    width: 160px;
+                    height: 160px;
+
+                    Rectangle {
+                        width: 160px;
+                        height: 160px;
+                        border-radius: 80px;
+                        background: @radial-gradient(circle, Ck.cyan.transparentize(0.55) 0%, #00000000 70%);
+                    }
+
+                    Rectangle {
+                        width: 120px;
+                        height: 120px;
+                        border-radius: 60px;
+                        background: @linear-gradient(135deg, #00e5ff, #7c4dff);
+                        drop-shadow-blur: 36px;
+                        drop-shadow-color: Ck.cyan.transparentize(0.5);
+
+                        VerticalLayout {
+                            alignment: center;
+                            spacing: 0px;
+
+                            Text {
+                                text: root.score;
+                                color: Ck.bg1;
+                                font-family: Ck.mono;
+                                font-size: 44px;
+                                font-weight: 700;
+                                horizontal-alignment: center;
+                            }
+
+                            Text {
+                                text: "/ " + root.total;
+                                color: Ck.bg1;
+                                font-family: Ck.mono;
+                                font-size: 14px;
+                                font-weight: 600;
+                                horizontal-alignment: center;
+                            }
+                        }
+                    }
+                }
+            }
+
+            Text {
+                text: "Ajoyib natija!";
+                color: Ck.text;
+                font-family: Ck.sans;
+                font-size: 24px;
+                font-weight: 700;
+                horizontal-alignment: center;
+            }
+
+            HorizontalLayout {
+                alignment: center;
+                spacing: 10px;
+
+                CkBadge {
+                    text: "O'RIN " + root.rank;
+                    tint: Ck.purple;
+                    dot: true;
+                }
+
+                HorizontalLayout {
+                    spacing: 4px;
+                    CkBadge {
+                        text: root.reward;
+                        tint: Ck.mint;
+                    }
+                    VerticalLayout {
+                        alignment: center;
+                        CkCoin { size: 14px; }
+                    }
+                }
+            }
+        }
+
+        VerticalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-bottom: 8px;
+
+            CkPrimaryButton {
+                text: "Yakunlash";
+                icon: CkIcons.check;
+                clicked => {
+                    root.done();
+                }
+            }
+        }
+    }
+}

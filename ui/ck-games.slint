@@ -1,0 +1,538 @@
+// ═══════════════════════════════════════════════════════════════════════════
+// MINI-O'YINLAR — Flutter `user/mini_games_screen.dart` bilan 1:1.
+//
+// Tartib: NavBar (MINI-O'YINLAR · ARENA / Game Hub + "7 NISHON" badge) →
+// "O'yna · g'olib bo'l · CyberAqcha topil" → TOP HAFTA hero (o'yin rasmi,
+// nomi, "+20 ₵", "Boshlash" tugmasi) → "Barcha o'yinlar" 2 ustunli to'r
+// (rasm, nom, "N marta o'ynaldi", +tanga) → "Liderlar · bugun" ro'yxati.
+// ═══════════════════════════════════════════════════════════════════════════
+
+import {
+    Ck, CkIcons,
+    CkIcon, CkIconSlot, CkBadge, CkCoin, CkAvatar,
+    CkCard, CkCardFlat, CkHeroCard,
+    CkNavBar, CkScroll, CkSectionHead,
+} from "ck-common.slint";
+
+export struct CkGameRow {
+    title: string,
+    plays: string,
+    reward: string,
+    tint: color,
+}
+
+export struct CkGameLeader {
+    rank: int,
+    name: string,
+    initials: string,
+    score: string,
+}
+
+export component GamesPage inherits Rectangle {
+    background: transparent;
+
+    in property <string> hero-title: "Xotira o'yini";
+    in property <string> hero-sub: "O'yna va yut!";
+    in property <string> hero-reward: "+20";
+
+    in property <[CkGameRow]> games: [
+        { title: "Tezkor savol-javob", plays: "0 marta o'ynaldi", reward: "+30", tint: #00e5ff },
+        { title: "Tezkor terish", plays: "0 marta o'ynaldi", reward: "+25", tint: #ff2d95 },
+    ];
+
+    in property <[CkGameLeader]> leaders: [
+        { rank: 1, name: "Hhjjjhbb", initials: "HH", score: "395" },
+        { rank: 2, name: "Jasur Toirov", initials: "JT", score: "295" },
+        { rank: 3, name: "Aziz Karimov", initials: "AK", score: "155" },
+    ];
+
+    callback back();
+    callback play(index: int);
+
+    CkScroll {
+        CkNavBar {
+            eyebrow: "MINI-O'YINLAR · ARENA";
+            title: "Game Hub";
+            back => {
+                root.back();
+            }
+
+            CkBadge {
+                text: "7 NISHON";
+                tint: Ck.mint;
+            }
+        }
+
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-bottom: 8px;
+
+            Text {
+                text: "O'yna · g'olib bo'l · CyberAqcha topil";
+                color: Ck.text-dim;
+                font-family: Ck.sans;
+                font-size: 14px;
+            }
+        }
+
+        // ── TOP HAFTA HERO ──────────────────────────────────────────────
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+
+            CkCard {
+                interactive: false;
+
+                VerticalLayout {
+                    spacing: 0px;
+
+                    // O'yin rasmi.
+                    Rectangle {
+                        height: 190px;
+                        border-top-left-radius: Ck.r-lg;
+                        border-top-right-radius: Ck.r-lg;
+                        background: @linear-gradient(150deg, #33257a, #1d1550);
+                        clip: true;
+
+                        Rectangle {
+                            x: 30px;
+                            y: 22px;
+                            width: 60px;
+                            height: 60px;
+                            border-radius: 30px;
+                            background: @radial-gradient(circle, #ffffff18 0%, #00000000 70%);
+                        }
+
+                        CkIcon {
+                            commands: CkIcons.game;
+                            size: 56px;
+                            tint: #d8d4f0;
+                        }
+
+                        // TOP HAFTA badge.
+                        Rectangle {
+                            x: 16px;
+                            y: 16px;
+                            height: 28px;
+                            width: th.preferred-width + 24px;
+                            border-radius: 14px;
+                            border-width: 1px;
+                            border-color: Ck.magenta.transparentize(0.4);
+                            background: Ck.magenta.transparentize(0.85);
+
+                            th := Text {
+                                text: "TOP HAFTA";
+                                color: Ck.magenta;
+                                font-family: Ck.mono;
+                                font-size: 11px;
+                                letter-spacing: 1.6px;
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
+                            }
+                        }
+                    }
+
+                    // Pastki qism.
+                    VerticalLayout {
+                        padding: 18px;
+                        spacing: 12px;
+
+                        HorizontalLayout {
+                            spacing: 10px;
+
+                            VerticalLayout {
+                                horizontal-stretch: 1;
+                                spacing: 4px;
+
+                                Text {
+                                    text: root.hero-title;
+                                    color: Ck.text;
+                                    font-family: Ck.sans;
+                                    font-size: 20px;
+                                    font-weight: 700;
+                                }
+
+                                Text {
+                                    text: root.hero-sub;
+                                    color: Ck.text-dim;
+                                    font-family: Ck.sans;
+                                    font-size: 14px;
+                                }
+                            }
+
+                            VerticalLayout {
+                                alignment: center;
+                                HorizontalLayout {
+                                    spacing: 4px;
+                                    Text {
+                                        text: root.hero-reward;
+                                        color: Ck.text;
+                                        font-family: Ck.mono;
+                                        font-size: 22px;
+                                        font-weight: 700;
+                                        vertical-alignment: center;
+                                    }
+                                    VerticalLayout {
+                                        alignment: center;
+                                        CkCoin { size: 19px; }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Boshlash tugmasi.
+                        Rectangle {
+                            height: 52px;
+                            border-radius: 16px;
+                            background: @linear-gradient(135deg, #00e5ff, #7c4dff);
+                            opacity: hb.pressed ? 0.85 : 1.0;
+                            animate opacity { duration: 110ms; }
+
+                            hb := TouchArea {
+                                clicked => {
+                                    root.play(0);
+                                }
+                            }
+
+                            HorizontalLayout {
+                                alignment: center;
+                                spacing: 10px;
+
+                                VerticalLayout {
+                                    alignment: center;
+                                    CkIcon {
+                                        commands: CkIcons.play;
+                                        size: 16px;
+                                        tint: Ck.bg1;
+                                        filled: true;
+                                    }
+                                }
+
+                                Text {
+                                    text: "Boshlash";
+                                    color: Ck.bg1;
+                                    font-family: Ck.sans;
+                                    font-size: 16px;
+                                    font-weight: 700;
+                                    vertical-alignment: center;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // ── BARCHA O'YINLAR ─────────────────────────────────────────────
+        CkSectionHead {
+            title: "Barcha o'yinlar";
+        }
+
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            spacing: 12px;
+
+            for g[i] in root.games: CkCardFlat {
+                horizontal-stretch: 1;
+                clicked => {
+                    root.play(i + 1);
+                }
+
+                VerticalLayout {
+                    padding: 12px;
+                    spacing: 10px;
+
+                    Rectangle {
+                        height: 96px;
+                        border-radius: 12px;
+                        background: @linear-gradient(150deg, #2a2260, #171240);
+                        clip: true;
+
+                        Rectangle {
+                            x: 16px;
+                            y: 10px;
+                            width: 36px;
+                            height: 36px;
+                            border-radius: 18px;
+                            background: @radial-gradient(circle, #ffffff18 0%, #00000000 70%);
+                        }
+
+                        CkIcon {
+                            commands: CkIcons.game;
+                            size: 30px;
+                            tint: #d8d4f0;
+                        }
+                    }
+
+                    Text {
+                        text: g.title;
+                        color: Ck.text;
+                        font-family: Ck.sans;
+                        font-size: 15px;
+                        font-weight: 600;
+                        overflow: elide;
+                    }
+
+                    Text {
+                        text: g.plays;
+                        color: Ck.text-dim;
+                        font-family: Ck.sans;
+                        font-size: 12px;
+                    }
+
+                    HorizontalLayout {
+                        spacing: 6px;
+                        alignment: start;
+
+                        VerticalLayout {
+                            alignment: center;
+                            CkCoin { size: 16px; }
+                        }
+
+                        Text {
+                            text: g.reward;
+                            color: Ck.cyan;
+                            font-family: Ck.mono;
+                            font-size: 14px;
+                            font-weight: 700;
+                            vertical-alignment: center;
+                        }
+                    }
+
+                    Rectangle { height: 26px; }
+                }
+            }
+        }
+
+        // ── LIDERLAR ────────────────────────────────────────────────────
+        CkSectionHead {
+            title: "Liderlar · bugun";
+        }
+
+        VerticalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            spacing: 10px;
+
+            for l in root.leaders: CkCardFlat {
+                interactive: false;
+
+                HorizontalLayout {
+                    padding: 12px;
+                    spacing: 14px;
+
+                    VerticalLayout {
+                        alignment: center;
+                        Rectangle {
+                            width: 24px;
+                            Text {
+                                text: l.rank;
+                                color: l.rank == 1 ? Ck.amber : Ck.text;
+                                font-family: Ck.sans;
+                                font-size: 18px;
+                                font-weight: 700;
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
+                            }
+                        }
+                    }
+
+                    VerticalLayout {
+                        alignment: center;
+                        CkAvatar {
+                            size: 44px;
+                            initials: l.initials;
+                        }
+                    }
+
+                    Text {
+                        text: l.name;
+                        color: Ck.text;
+                        font-family: Ck.sans;
+                        font-size: 15px;
+                        font-weight: 600;
+                        vertical-alignment: center;
+                        horizontal-stretch: 1;
+                        overflow: elide;
+                    }
+
+                    Text {
+                        text: l.score;
+                        color: Ck.cyan;
+                        font-family: Ck.mono;
+                        font-size: 16px;
+                        font-weight: 700;
+                        vertical-alignment: center;
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ── O'YIN EKRANI (Reaction Time) ───────────────────────────────────────────
+// O'yin sahnasi avvalgidek qoladi (Flutter'da har o'yin o'z ekrani).
+
+export component GamePlayPage inherits Rectangle {
+    background: #06060f;
+
+    in property <bool> active: true;
+    in property <string> title: "Xotira o'yini";
+    in property <string> score: "0";
+    in property <string> best: "Rekord: 320 ms";
+
+    callback back();
+
+    VerticalLayout {
+        padding-top: Ck.safe-top;
+        padding-bottom: Ck.safe-bottom;
+
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-top: 14px;
+            spacing: 12px;
+
+            VerticalLayout {
+                alignment: center;
+                Rectangle {
+                    width: 38px;
+                    height: 38px;
+                    border-radius: 12px;
+                    border-width: 1px;
+                    border-color: Ck.line-strong;
+                    background: Ck.bg2;
+
+                    TouchArea {
+                        clicked => {
+                            root.back();
+                        }
+                    }
+
+                    CkIcon {
+                        commands: CkIcons.chev-l;
+                        size: 16px;
+                        tint: Ck.text;
+                    }
+                }
+            }
+
+            VerticalLayout {
+                horizontal-stretch: 1;
+                alignment: center;
+                Text {
+                    text: root.title;
+                    color: Ck.text;
+                    font-family: Ck.sans;
+                    font-size: 16px;
+                    font-weight: 600;
+                    horizontal-alignment: center;
+                }
+            }
+
+            Rectangle { width: 38px; }
+        }
+
+        VerticalLayout {
+            vertical-stretch: 1;
+            alignment: center;
+            spacing: 18px;
+
+            Text {
+                text: "NATIJANGIZ";
+                color: Ck.text-mute;
+                font-family: Ck.mono;
+                font-size: 10px;
+                letter-spacing: 2px;
+                horizontal-alignment: center;
+            }
+
+            Text {
+                text: root.score;
+                color: Ck.text;
+                font-family: Ck.mono;
+                font-size: 64px;
+                font-weight: 700;
+                horizontal-alignment: center;
+            }
+
+            Text {
+                text: root.best;
+                color: Ck.text-dim;
+                font-family: Ck.sans;
+                font-size: 13px;
+                horizontal-alignment: center;
+            }
+
+            HorizontalLayout {
+                alignment: center;
+                padding-top: 12px;
+
+                Rectangle {
+                    width: 168px;
+                    height: 168px;
+                    border-radius: 84px;
+                    border-width: 2px;
+                    border-color: Ck.cyan.transparentize(0.5);
+                    background: Ck.cyan.transparentize(0.88);
+
+                    TouchArea { }
+
+                    VerticalLayout {
+                        alignment: center;
+                        spacing: 6px;
+
+                        HorizontalLayout {
+                            alignment: center;
+                            CkIcon {
+                                commands: CkIcons.bolt;
+                                size: 30px;
+                                tint: Ck.cyan;
+                            }
+                        }
+
+                        Text {
+                            text: "BOSING";
+                            color: Ck.cyan;
+                            font-family: Ck.mono;
+                            font-size: 11px;
+                            letter-spacing: 2px;
+                            horizontal-alignment: center;
+                        }
+                    }
+                }
+            }
+        }
+
+        HorizontalLayout {
+            padding: 20px;
+
+            Rectangle {
+                height: 48px;
+                border-radius: 14px;
+                border-width: 1px;
+                border-color: Ck.line-strong;
+                background: gb.pressed ? Ck.bg3 : Ck.bg2;
+                animate background { duration: 110ms; }
+
+                gb := TouchArea {
+                    clicked => {
+                        root.back();
+                    }
+                }
+
+                Text {
+                    text: "O'yindan chiqish";
+                    color: Ck.text;
+                    font-family: Ck.sans;
+                    font-size: 14px;
+                    font-weight: 600;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                }
+            }
+        }
+    }
+}

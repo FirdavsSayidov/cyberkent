@@ -1,0 +1,53 @@
+[package]
+name = "slint-app"
+version = "0.1.0"
+edition = "2024"
+
+# "lib" — desktop bin uchun, "cdylib" — Android uchun (tizim .so ichidagi
+# android_main'ni chaqiradi).
+[lib]
+crate-type = ["lib", "cdylib"]
+
+[dependencies]
+slint = "1.16.1"
+
+# Android'da boshqa backend kerak: winit emas, android-activity.
+# libloading — ZirhMobil SDK'ning libmobil.so'sini ochish uchun,
+# ndk-context — release'da SDK'ga JavaVM berish uchun (src/zirh.rs).
+[target.'cfg(target_os = "android")'.dependencies]
+slint = { version = "1.16.1", features = ["backend-android-activity-06"] }
+libloading = "0.8"
+ndk-context = "0.1"
+
+# Faqat `examples/shots.rs` uchun — barcha ekranlarni PNG'ga tushiradi.
+[dev-dependencies]
+png = "0.17"
+
+[build-dependencies]
+slint-build = "1.16.1"
+
+[profile.release]
+codegen-units = 1
+lto = true
+
+# ── cargo-apk sozlamalari ───────────────────────────────────────────────────
+[package.metadata.android]
+package = "uz.csec.slintapp"
+apk_name = "slint-app"
+build_targets = ["aarch64-linux-android"]
+# ZirhMobil SDK. Ichida <abi>/libmobil.so — cargo-apk uni APK'ning
+# lib/<abi>/ katalogiga ko'chiradi, dlopen o'sha yerdan topadi.
+runtime_libs = "zirh/jni"
+
+[package.metadata.android.sdk]
+min_sdk_version = 24
+target_sdk_version = 34
+
+# Release build ham imzo talab qiladi. Sinov uchun debug kaliti yetarli —
+# Play Store'ga chiqarishda o'z keystore'ingizga o'zgartiring.
+[package.metadata.android.signing.release]
+path = "/Users/macpro/.android/debug.keystore"
+keystore_password = "android"
+
+[package.metadata.android.application]
+label = "CyberKent"

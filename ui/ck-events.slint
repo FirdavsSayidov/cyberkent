@@ -1,0 +1,429 @@
+// ═══════════════════════════════════════════════════════════════════════════
+// TADBIRLAR — Flutter `events/events_screen.dart` bilan 1:1.
+//
+// Tartib: TopBar (TADBIRLAR / Tadbir) → "Barcha tadbirlar" + JADVAL →
+// qidiruv → filtr chiplari (Hammasi/Quiz/Workshop/CTF/Taqdimot) →
+// katta poster kartalar (sana overlay, tur va holat badge, tur ikonkasi,
+// sarlavha, sana·joy, tavsif, aniq vaqt + "Xaritada ko'rsatish").
+// ═══════════════════════════════════════════════════════════════════════════
+
+import {
+    Ck, CkIcons,
+    CkIcon, CkIconSlot, CkIconButton, CkBadge, CkChip,
+    CkCard, CkImage, CkGhostButton,
+    CkTopBar, CkSearchInput, CkSectionHead,
+} from "ck-common.slint";
+
+export struct CkEventRow {
+    title: string,
+    // poster ustidagi katta sana
+    day: string,
+    month: string,
+    // "7 okt" qisqa sana va joy
+    date-short: string,
+    place: string,
+    // tur va uning rangi (quiz=purple, workshop=mint, ctf=danger, taqdimot=cyan)
+    tag: string,
+    tag-tint: color,
+    // tur ikonkasi (poster pastki o'ng)
+    icon: string,
+    // holat: "86 KUN" (cyan) / "JONLI" (danger) / "Tugadi" (mute)
+    status: string,
+    status-tint: color,
+    status-live: bool,
+    // tavsif va pastki aniq vaqt
+    about: string,
+    when-full: string,
+    // "Xaritada ko'rsatish" tugmasi chiqsinmi (standi bor tadbirlar)
+    has-map: bool,
+    bga: color,
+    bgb: color,
+}
+
+export component EventsPage inherits Rectangle {
+    // Qobiq ichida butun joyni egallaydi; fon qobiqda chiziladi.
+    background: transparent;
+
+    in property <[string]> filters: ["HAMMASI", "QUIZ", "WORKSHOP", "CTF", "TAQDIMOT"];
+
+    in property <[CkEventRow]> events: [
+        {
+            title: "Ochilish marosimi",
+            day: "7", month: "OKT", date-short: "7 okt", place: "Asosiy sahna",
+            tag: "TAQDIMOT", tag-tint: #00e5ff, icon: CkIcons.stream,
+            status: "86 KUN", status-tint: #00e5ff, status-live: false,
+            about: "Cyberkent rasmiy ochilishi va kun rejasi taqdimoti",
+            when-full: "7-OKTABR, 14:10", has-map: true,
+            bga: #2a4a8a, bgb: #0f1d4a,
+        },
+        {
+            title: "Cyber Quiz: 1-tur",
+            day: "7", month: "OKT", date-short: "7 okt", place: "Quiz zonasi",
+            tag: "CYBER QUIZ", tag-tint: #b8a4ff, icon: CkIcons.info,
+            status: "86 KUN", status-tint: #00e5ff, status-live: false,
+            about: "Kiberxavfsizlik bo'yicha savollar musobaqasi — 1-tur",
+            when-full: "7-OKTABR, 15:10", has-map: true,
+            bga: #6a3adf, bgb: #1d0f4a,
+        },
+        {
+            title: "CTF musobaqasi",
+            day: "7", month: "OKT", date-short: "7 okt", place: "Arena",
+            tag: "CTF", tag-tint: #ff5577, icon: CkIcons.flag,
+            status: "86 KUN", status-tint: #00e5ff, status-live: false,
+            about: "Capture The Flag — jamoaviy kiberxavfsizlik bellashuvi",
+            when-full: "7-OKTABR, 20:09", has-map: true,
+            bga: #8a2a3a, bgb: #2a0f1d,
+        },
+        {
+            title: "Workshop: AI asoslari",
+            day: "8", month: "OKT", date-short: "8 okt", place: "B2 zal",
+            tag: "WORKSHOP", tag-tint: #5bffc2, icon: CkIcons.book,
+            status: "87 KUN", status-tint: #00e5ff, status-live: false,
+            about: "Sun'iy intellekt bilan amaliy mashg'ulot",
+            when-full: "8-OKTABR, 11:00", has-map: false,
+            bga: #1a6a5a, bgb: #0f2a1d,
+        },
+    ];
+
+    // Sahifa ochiqmi — animatsiyalarni boshqarish uchun (boshqa tabda turganda
+    // behuda qayta chizmaslik). Qobiq tab almashganda o'rnatadi.
+    in property <bool> active: true;
+
+    property <int> chip: 0;
+
+    callback filter-clicked();
+    callback search-changed(text: string);
+    callback event-clicked(index: int);
+    callback register-clicked(index: int);
+    callback favourite-clicked(index: int);
+    callback schedule-clicked();
+    callback map-clicked(index: int);
+
+    VerticalLayout {
+        padding-top: Ck.safe-top;
+
+        // ── QOTIB TURADIGAN SARLAVHA ────────────────────────────────────
+        CkTopBar {
+            eyebrow: "TADBIRLAR";
+            title: "Tadbir";
+        }
+
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-bottom: 2px;
+
+            Text {
+                text: "Barcha tadbirlar";
+                color: Ck.text;
+                font-family: Ck.sans;
+                font-size: 17px;
+                font-weight: 600;
+                vertical-alignment: center;
+            }
+
+            Rectangle { horizontal-stretch: 1; }
+
+            Rectangle {
+                width: jd.preferred-width;
+                height: jd.preferred-height;
+
+                TouchArea {
+                    clicked => {
+                        root.schedule-clicked();
+                    }
+                }
+
+                jd := HorizontalLayout {
+                    spacing: 6px;
+
+                    Text {
+                        text: "JADVAL";
+                        color: Ck.cyan;
+                        font-family: Ck.mono;
+                        font-size: 11px;
+                        letter-spacing: 1.4px;
+                        vertical-alignment: center;
+                    }
+
+                    VerticalLayout {
+                        alignment: center;
+                        CkIcon {
+                            commands: CkIcons.arrow-r;
+                            size: 12px;
+                            tint: Ck.cyan;
+                        }
+                    }
+                }
+            }
+        }
+
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-top: 10px;
+            padding-bottom: 10px;
+
+            search := CkSearchInput {
+                placeholder: "Tadbir yoki joy bo'yicha qidirish...";
+                edited => {
+                    root.search-changed(search.text);
+                }
+            }
+        }
+
+        // Filtr chiplari.
+        Rectangle {
+            height: 40px;
+
+            Flickable {
+                width: parent.width;
+                height: 32px;
+                viewport-width: chips.preferred-width;
+                viewport-height: self.height;
+
+                chips := HorizontalLayout {
+                    padding-left: 20px;
+                    padding-right: 20px;
+                    spacing: 8px;
+
+                    for f[i] in root.filters: CkChip {
+                        text: f;
+                        active: root.chip == i;
+                        clicked => {
+                            root.chip = i;
+                        }
+                    }
+                }
+            }
+        }
+
+        // ── AYLANADIGAN RO'YXAT ─────────────────────────────────────────
+        Flickable {
+            vertical-stretch: 1;
+            viewport-width: self.width;
+            viewport-height: list.preferred-height;
+            viewport-y: -CkDebugScroll.value;
+
+            list := VerticalLayout {
+                width: parent.width;
+                alignment: start;
+                padding-left: 20px;
+                padding-right: 20px;
+                padding-top: 4px;
+                padding-bottom: Ck.tabbar-space;
+                spacing: 12px;
+
+                for ev[index] in root.events: CkCard {
+                    clicked => {
+                        root.event-clicked(index);
+                    }
+
+                    VerticalLayout {
+                        padding: 12px;
+                        spacing: 10px;
+
+                        // ── POSTER ──────────────────────────────────────
+                        Rectangle {
+                            height: 120px;
+                            border-radius: 14px;
+                            background: @linear-gradient(135deg, ev.bga, ev.bgb);
+                            clip: true;
+
+                            // Katta sana — markazda.
+                            VerticalLayout {
+                                alignment: center;
+                                spacing: 0px;
+
+                                Text {
+                                    text: ev.day;
+                                    color: #ffffff;
+                                    font-family: Ck.sans;
+                                    font-size: 28px;
+                                    font-weight: 700;
+                                    horizontal-alignment: center;
+                                }
+
+                                Text {
+                                    text: ev.month;
+                                    color: #ffffff;
+                                    font-family: Ck.mono;
+                                    font-size: 9px;
+                                    letter-spacing: 2px;
+                                    horizontal-alignment: center;
+                                }
+                            }
+
+                            // Tur badge — yuqori chap.
+                            HorizontalLayout {
+                                x: 10px;
+                                y: 10px;
+                                width: parent.width - 20px;
+                                height: 22px;
+
+                                CkBadge {
+                                    text: ev.tag;
+                                    tint: ev.tag-tint;
+                                }
+
+                                Rectangle { horizontal-stretch: 1; }
+
+                                CkBadge {
+                                    text: ev.status;
+                                    tint: ev.status-tint;
+                                    live: ev.status-live;
+                                    live-running: root.active && ev.status-live;
+                                }
+                            }
+
+                            // Tur ikonkasi — pastki o'ng.
+                            Rectangle {
+                                x: parent.width - self.width - 10px;
+                                y: parent.height - self.height - 10px;
+                                width: 30px;
+                                height: 30px;
+                                border-radius: 10px;
+                                border-width: 1px;
+                                border-color: #ffffff33;
+                                background: #0a0a18bf;
+
+                                CkIcon {
+                                    commands: ev.icon;
+                                    size: 16px;
+                                    tint: #ffffff;
+                                }
+                            }
+                        }
+
+                        // Sarlavha.
+                        Text {
+                            text: ev.title;
+                            color: Ck.text;
+                            font-family: Ck.sans;
+                            font-size: 14px;
+                            font-weight: 600;
+                            wrap: word-wrap;
+                        }
+
+                        // Sana · joy.
+                        HorizontalLayout {
+                            spacing: 5px;
+
+                            VerticalLayout {
+                                alignment: center;
+                                CkIcon {
+                                    commands: CkIcons.calendar;
+                                    size: 13px;
+                                    tint: Ck.text-mute;
+                                }
+                            }
+
+                            Text {
+                                text: ev.date-short;
+                                color: Ck.text-dim;
+                                font-family: Ck.sans;
+                                font-size: 12px;
+                                vertical-alignment: center;
+                            }
+
+                            Rectangle { width: 7px; }
+
+                            VerticalLayout {
+                                alignment: center;
+                                CkIcon {
+                                    commands: CkIcons.pin;
+                                    size: 14px;
+                                    tint: Ck.text-mute;
+                                }
+                            }
+
+                            Text {
+                                text: ev.place;
+                                color: Ck.text-dim;
+                                font-family: Ck.sans;
+                                font-size: 12px;
+                                vertical-alignment: center;
+                                overflow: elide;
+                                horizontal-stretch: 1;
+                            }
+                        }
+
+                        // Tavsif.
+                        if ev.about != "": Text {
+                            text: ev.about;
+                            color: Ck.text-dim;
+                            font-family: Ck.sans;
+                            font-size: 13px;
+                            wrap: word-wrap;
+                        }
+
+                        // Pastki qator: aniq vaqt + amal.
+                        HorizontalLayout {
+                            spacing: 10px;
+
+                            Text {
+                                text: ev.when-full;
+                                color: Ck.text-mute;
+                                font-family: Ck.mono;
+                                font-size: 10px;
+                                letter-spacing: 1px;
+                                vertical-alignment: center;
+                                horizontal-stretch: 1;
+                                overflow: elide;
+                            }
+
+                            Rectangle {
+                                width: mapb.preferred-width + 28px;
+                                height: 36px;
+                                border-radius: 12px;
+                                border-width: 1px;
+                                border-color: Ck.cyan.transparentize(0.6);
+                                background: mt.pressed ? Ck.cyan.transparentize(0.86) : transparent;
+                                animate background { duration: 110ms; }
+
+                                mt := TouchArea {
+                                    clicked => {
+                                        if (ev.has-map) {
+                                            root.map-clicked(index);
+                                        } else {
+                                            root.event-clicked(index);
+                                        }
+                                    }
+                                }
+
+                                mapb := HorizontalLayout {
+                                    alignment: center;
+                                    spacing: 6px;
+
+                                    if ev.has-map: VerticalLayout {
+                                        alignment: center;
+                                        CkIcon {
+                                            commands: CkIcons.pin;
+                                            size: 14px;
+                                            tint: Ck.cyan;
+                                        }
+                                    }
+
+                                    Text {
+                                        text: ev.has-map ? "Xaritada ko'rsatish" : "Ochish";
+                                        color: Ck.cyan;
+                                        font-family: Ck.sans;
+                                        font-size: 13px;
+                                        font-weight: 600;
+                                        vertical-alignment: center;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Aylanadigan sahifalarni rasmga olish uchun yordamchi (odatda 0).
+import { CkDebug } from "ck-common.slint";
+global CkDebugScroll {
+    in-out property <length> value <=> CkDebug.scroll;
+}

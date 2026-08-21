@@ -1,0 +1,415 @@
+// ═══════════════════════════════════════════════════════════════════════════
+// DO'KON — Flutter `shop/shop_screen.dart` bilan 1:1.
+//
+// Tartib: TopBar (CYBER · DO'KON / Do'kon + balans chipi) + "CyberAqcha bilan
+// to'lang" tagline → qidiruv → chiplar (BARCHASI/GEAR/APPAREL/HOODIE/STICKER)
+// → "HAFTALIK TO'PLAM" hero (rasm, nom, tavsif, narx, o'q) → "Tavsiyalar"
+// 2 ustunli to'r (rasm + kategoriya badge, nom, "Qoldiq · N", narx).
+// ═══════════════════════════════════════════════════════════════════════════
+
+import {
+    Ck, CkIcons,
+    CkIcon, CkIconSlot, CkIconButton, CkBadge, CkChip, CkCoin,
+    CkCard, CkCardFlat, CkImage, CkHeroCard,
+    CkSectionHead, CkScroll, CkSearchInput,
+} from "ck-common.slint";
+
+export struct CkProduct {
+    title: string,
+    stock: string,
+    price: string,
+    tag: string,
+    bga: color,
+    bgb: color,
+}
+
+// Mahsulotlarni qidiruv matni va kategoriya (tag) bo'yicha filtrlaydi.
+// Rust amalga oshiradi (src/lib.rs wire_shop) — Slint'da massiv filtri yo'q.
+export global ShopFilter {
+    pure callback run([CkProduct], string, string) -> [CkProduct];
+}
+
+// To'rdagi bitta mahsulot — Flutter'dagi karta bilan bir xil.
+component CkProductCard inherits CkCardFlat {
+    in property <CkProduct> item;
+
+    // `clicked` va bosish javobi CkCardFlat'dan meros bo'lib keladi
+
+    VerticalLayout {
+        padding: 12px;
+        spacing: 10px;
+
+        // Rasm + kategoriya.
+        Rectangle {
+            height: 118px;
+            border-radius: 12px;
+            background: @linear-gradient(160deg, #2a2a5a, #14143a);
+            clip: true;
+
+            // Yorug' dog'.
+            Rectangle {
+                x: 14px;
+                y: 10px;
+                width: 44px;
+                height: 44px;
+                border-radius: 22px;
+                background: @radial-gradient(circle, #ffffff22 0%, #00000000 70%);
+            }
+
+            // Kategoriya badge — yuqori o'ng.
+            Rectangle {
+                x: parent.width - self.width - 10px;
+                y: 10px;
+                height: 24px;
+                width: tag-t.preferred-width + 20px;
+                border-radius: 12px;
+                border-width: 1px;
+                border-color: Ck.amber.transparentize(0.55);
+                background: #0a0a18aa;
+
+                tag-t := Text {
+                    text: root.item.tag;
+                    color: Ck.amber;
+                    font-family: Ck.mono;
+                    font-size: 10px;
+                    letter-spacing: 1.4px;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                }
+            }
+
+            // Kategoriya nomi — pastki chap (mono).
+            Text {
+                x: 12px;
+                y: parent.height - self.height - 10px;
+                text: root.item.tag;
+                color: Ck.text-dim;
+                font-family: Ck.mono;
+                font-size: 10px;
+                letter-spacing: 1.6px;
+            }
+        }
+
+        Text {
+            text: root.item.title;
+            color: Ck.text;
+            font-family: Ck.sans;
+            font-size: 15px;
+            font-weight: 600;
+            overflow: elide;
+        }
+
+        Text {
+            text: "Qoldiq · " + root.item.stock;
+            color: Ck.text-dim;
+            font-family: Ck.sans;
+            font-size: 12px;
+        }
+
+        Rectangle { height: 20px; }
+
+        HorizontalLayout {
+            spacing: 6px;
+
+            Text {
+                text: root.item.price;
+                color: Ck.text;
+                font-family: Ck.mono;
+                font-size: 16px;
+                font-weight: 700;
+                vertical-alignment: center;
+            }
+
+            VerticalLayout {
+                alignment: center;
+                CkCoin { size: 14px; }
+            }
+
+            Rectangle { horizontal-stretch: 1; }
+        }
+    }
+}
+
+export component ShopPage inherits Rectangle {
+    // Qobiq ichida butun joyni egallaydi; fon qobiqda chiziladi.
+    background: transparent;
+
+    in property <string> balance: "155";
+
+    in property <[string]> filters: ["BARCHASI", "GEAR", "APPAREL", "HOODIE", "STICKER"];
+
+    in property <string> deal-title: "CK Sumka";
+    in property <string> deal-sub: "Cyberkent rasmiy mahsuloti.";
+    in property <string> deal-price: "250";
+
+    in property <[CkProduct]> products: [
+        { title: "Termo idish", stock: "24", price: "90", tag: "GEAR", bga: #2a2a5a, bgb: #14143a },
+        { title: "CK Kepka", stock: "19", price: "80", tag: "APPAREL", bga: #2a2a5a, bgb: #14143a },
+        { title: "CK Hoodie", stock: "14", price: "200", tag: "HOODIE", bga: #2a2a5a, bgb: #14143a },
+        { title: "Stiker to'plami", stock: "98", price: "30", tag: "STICKER", bga: #2a2a5a, bgb: #14143a },
+        { title: "CK Futbolka", stock: "40", price: "120", tag: "APPAREL", bga: #2a2a5a, bgb: #14143a },
+        { title: "CK Sumka", stock: "9", price: "250", tag: "GEAR", bga: #2a2a5a, bgb: #14143a },
+    ];
+
+    in property <int> grid-rows: 3;
+
+    // Sahifa ochiqmi — animatsiyalarni boshqarish uchun.
+    in property <bool> active: true;
+
+    property <int> chip: 0;
+    // Qidiruv matni (mahalliy) va filtrlangan ro'yxat (Rust filtri orqali).
+    property <string> query;
+    property <[CkProduct]> shown: ShopFilter.run(root.products, root.query, root.chip == 0 ? "" : root.filters[root.chip]);
+    property <int> vis-rows: Math.ceil(root.shown.length / 2);
+
+    callback deal-clicked();
+    callback product-clicked(index: int);
+    callback orders-clicked();
+    callback search-changed(text: string);
+
+    CkScroll {
+        // ── SARLAVHA + BALANS ───────────────────────────────────────────
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-top: 12px;
+            padding-bottom: 2px;
+            spacing: 10px;
+
+            VerticalLayout {
+                horizontal-stretch: 1;
+                spacing: 3px;
+
+                Text {
+                    text: "CYBER · DO'KON";
+                    color: Ck.cyan;
+                    font-family: Ck.mono;
+                    font-size: 11px;
+                    letter-spacing: 2px;
+                }
+
+                Text {
+                    text: "Do'kon";
+                    color: Ck.text;
+                    font-family: Ck.sans;
+                    font-size: 28px;
+                    font-weight: 700;
+                }
+
+                Text {
+                    text: "CyberAqcha bilan to'lang";
+                    color: Ck.text-dim;
+                    font-family: Ck.sans;
+                    font-size: 13px;
+                }
+            }
+
+            VerticalLayout {
+                alignment: start;
+                padding-top: 8px;
+
+                Rectangle {
+                    height: 44px;
+                    width: bal.preferred-width + 28px;
+                    border-radius: 14px;
+                    border-width: 1px;
+                    border-color: Ck.line-strong;
+                    background: Ck.bg2;
+
+                    bal := HorizontalLayout {
+                        padding-left: 14px;
+                        padding-right: 14px;
+                        spacing: 8px;
+
+                        VerticalLayout {
+                            alignment: center;
+                            CkCoin { size: 18px; }
+                        }
+
+                        Text {
+                            text: root.balance;
+                            color: Ck.text;
+                            font-family: Ck.sans;
+                            font-size: 16px;
+                            font-weight: 700;
+                            vertical-alignment: center;
+                        }
+                    }
+                }
+            }
+        }
+
+        // ── QIDIRUV ─────────────────────────────────────────────────────
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-top: 10px;
+            padding-bottom: 10px;
+
+            search := CkSearchInput {
+                placeholder: "Mahsulot qidirish";
+                edited => {
+                    root.query = search.text;
+                    root.search-changed(search.text);
+                }
+            }
+        }
+
+        // ── KATEGORIYALAR ───────────────────────────────────────────────
+        Rectangle {
+            height: 40px;
+
+            Flickable {
+                width: parent.width;
+                height: 32px;
+                viewport-width: chips.preferred-width;
+                viewport-height: self.height;
+
+                chips := HorizontalLayout {
+                    padding-left: 20px;
+                    padding-right: 20px;
+                    spacing: 8px;
+
+                    for f[i] in root.filters: CkChip {
+                        text: f;
+                        active: root.chip == i;
+                        clicked => {
+                            root.chip = i;
+                        }
+                    }
+                }
+            }
+        }
+
+        // ── HAFTALIK TO'PLAM ────────────────────────────────────────────
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-top: 6px;
+
+            CkHeroCard {
+                clicked => {
+                    root.deal-clicked();
+                }
+
+                HorizontalLayout {
+                    padding: 16px;
+                    spacing: 14px;
+
+                    // Mahsulot rasmi (placeholder).
+                    Rectangle {
+                        width: 92px;
+                        height: 92px;
+                        border-radius: 14px;
+                        background: @linear-gradient(160deg, #2a2a5a, #14143a);
+
+                        Rectangle {
+                            x: 14px;
+                            y: 10px;
+                            width: 36px;
+                            height: 36px;
+                            border-radius: 18px;
+                            background: @radial-gradient(circle, #ffffff22 0%, #00000000 70%);
+                        }
+                    }
+
+                    VerticalLayout {
+                        horizontal-stretch: 1;
+                        alignment: center;
+                        spacing: 6px;
+
+                        HorizontalLayout {
+                            alignment: start;
+                            CkBadge {
+                                text: "HAFTALIK TO'PLAM";
+                                tint: Ck.magenta;
+                            }
+                        }
+
+                        Text {
+                            text: root.deal-title;
+                            color: Ck.text;
+                            font-family: Ck.sans;
+                            font-size: 18px;
+                            font-weight: 700;
+                        }
+
+                        Text {
+                            text: root.deal-sub;
+                            color: Ck.text-dim;
+                            font-family: Ck.sans;
+                            font-size: 13px;
+                        }
+
+                        HorizontalLayout {
+                            spacing: 8px;
+
+                            Text {
+                                text: root.deal-price;
+                                color: Ck.cyan;
+                                font-family: Ck.mono;
+                                font-size: 20px;
+                                font-weight: 700;
+                                vertical-alignment: center;
+                            }
+
+                            VerticalLayout {
+                                alignment: center;
+                                CkCoin { size: 20px; }
+                            }
+
+                            Rectangle { horizontal-stretch: 1; }
+
+                            VerticalLayout {
+                                alignment: center;
+                                CkIcon {
+                                    commands: CkIcons.arrow-r;
+                                    size: 18px;
+                                    tint: Ck.cyan;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // ── TAVSIYALAR ──────────────────────────────────────────────────
+        CkSectionHead {
+            title: "Tavsiyalar";
+        }
+
+        VerticalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            spacing: 12px;
+
+            // Har qatorда aynan 2 karta — indeks bo'yicha (fantom width:0
+            // elementlarsiz, aks holda spacing kartalarni chetга suradi).
+            for row in root.vis-rows: HorizontalLayout {
+                spacing: 12px;
+
+                CkProductCard {
+                    horizontal-stretch: 1;
+                    item: root.shown[row * 2];
+                    clicked => {
+                        root.product-clicked(row * 2);
+                    }
+                }
+
+                if (row * 2 + 1) < root.shown.length: CkProductCard {
+                    horizontal-stretch: 1;
+                    item: root.shown[row * 2 + 1];
+                    clicked => {
+                        root.product-clicked(row * 2 + 1);
+                    }
+                }
+
+                // Toq songdagi oxirgi karta chapda qolishi uchun to'ldiruvchi.
+                if (row * 2 + 1) >= root.shown.length: Rectangle {
+                    horizontal-stretch: 1;
+                }
+            }
+        }
+    }
+}

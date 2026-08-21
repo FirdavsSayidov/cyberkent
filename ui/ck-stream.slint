@@ -1,0 +1,281 @@
+// ═══════════════════════════════════════════════════════════════════════════
+// 09 — JONLI EFIR
+//
+// Video oqimi o'rnida gradient qo'yilgan. Dizayndagi skanerlash chiziqlari
+// (repeating-linear-gradient) tushirildi: Slint'da takrorlanuvchi gradient
+// yo'q, uni yuzlab yupqa to'rtburchak bilan yasash esa har kadrda qimmat.
+// ═══════════════════════════════════════════════════════════════════════════
+
+import {
+    Ck, CkIcons,
+    CkIcon, CkIconSlot, CkBadge, CkCardFlat,
+} from "ck-common.slint";
+
+export struct CkChatLine {
+    user: string,
+    tint: color,
+    message: string,
+}
+
+component CkGlassIconButton inherits Rectangle {
+    in property <string> icon;
+    in property <length> size: 36px;
+    in property <brush> tint: #ffffff;
+    in property <bool> accent: false;
+
+    callback clicked();
+
+    width: root.size;
+    height: root.size;
+    border-radius: 12px;
+    border-width: root.accent ? 0px : 1px;
+    border-color: #ffffff1f;
+    background: root.accent
+        ? @linear-gradient(135deg, #00e5ff, #7c4dff)
+        : (touch.pressed ? #ffffff2b : #ffffff14);
+    animate background { duration: 140ms; easing: ease-out; }
+
+    touch := TouchArea {
+        clicked => {
+            root.clicked();
+        }
+    }
+
+    CkIcon {
+        commands: root.icon;
+        size: 16px;
+        tint: root.accent ? Ck.bg1 : root.tint;
+    }
+}
+
+export component StreamPage inherits Rectangle {
+    // Bu sahifa qobiqning fonini emas, o'z fonini ko'rsatadi.
+    background: #0a0a18;
+
+    // Ekran ochiqmi — LIVE pulsatsiyasini boshqaradi (yopilganda to'xtaydi).
+    in property <bool> active: true;
+
+    in property <string> title: "Frontend Hackathon";
+    in property <string> subtitle: "Yakuniy bosqich · CK Studio";
+    in property <string> viewers: "2,841";
+    in-out property <string> message;
+
+    in property <[CkChatLine]> chat: [
+        { user: "Nilufar", tint: #ff2d95, message: "🔥 ajoyib chiqyapti!" },
+        { user: "Bobur", tint: #00e5ff, message: "kim g'alaba qozadi?" },
+        { user: "CK Bot", tint: #5bffc2, message: "@Aziz +5 ₵ oldi 🎉" },
+    ];
+
+    callback close();
+    callback send();
+    callback like();
+
+    // ── "video" ──
+    Rectangle {
+        x: parent.width * 0.3 - self.width / 2;
+        y: parent.height * 0.4 - self.height / 2;
+        width: parent.width * 1.4;
+        height: self.width;
+        background: @radial-gradient(circle, Ck.magenta.transparentize(0.62) 0%, #00000000 50%);
+    }
+
+    Rectangle {
+        x: parent.width * 0.7 - self.width / 2;
+        y: parent.height * 0.6 - self.height / 2;
+        width: parent.width * 1.4;
+        height: self.width;
+        background: @radial-gradient(circle, Ck.cyan.transparentize(0.62) 0%, #00000000 50%);
+    }
+
+    // ── yuqori qator ──
+    HorizontalLayout {
+        x: 16px;
+        y: Ck.safe-top + 14px;
+        width: parent.width - 32px;
+        height: 36px;
+        spacing: 6px;
+
+        CkGlassIconButton {
+            icon: CkIcons.chev-d;
+            clicked => {
+                root.close();
+            }
+        }
+
+        Rectangle {
+            horizontal-stretch: 1;
+        }
+
+        VerticalLayout {
+            alignment: center;
+            CkBadge {
+                text: "JONLI";
+                tint: Ck.danger;
+                live: true;
+                live-running: root.active;
+            }
+        }
+
+        VerticalLayout {
+            alignment: center;
+            CkBadge {
+                text: root.viewers;
+                tint: Ck.text-dim;
+                solid: true;
+            }
+        }
+    }
+
+    // ── markazdagi yozuv ──
+    VerticalLayout {
+        y: parent.height * 0.36;
+        height: self.preferred-height;
+        spacing: 4px;
+
+        Text {
+            text: "NOW STREAMING";
+            color: #ffffff80;
+            font-family: Ck.mono;
+            font-size: 12px;
+            letter-spacing: 3.5px;
+            horizontal-alignment: center;
+        }
+
+        Text {
+            text: root.title;
+            color: #ffffff;
+            font-family: Ck.sans;
+            font-size: 22px;
+            font-weight: 700;
+            horizontal-alignment: center;
+        }
+
+        Text {
+            text: root.subtitle;
+            color: #ffffff99;
+            font-family: Ck.sans;
+            font-size: 12px;
+            horizontal-alignment: center;
+        }
+    }
+
+    // ── chat ──
+    VerticalLayout {
+        x: 16px;
+        y: parent.height - self.height - 110px - Ck.safe-bottom;
+        width: parent.width - 76px;
+        height: self.preferred-height;
+        spacing: 6px;
+        alignment: end;
+
+        for line in root.chat: HorizontalLayout {
+            alignment: start;
+
+            Rectangle {
+                width: row.preferred-width + 20px;
+                height: 26px;
+                border-radius: 12px;
+                border-width: 1px;
+                border-color: #ffffff1a;
+                background: #0a0a188c;
+
+                row := HorizontalLayout {
+                    padding-left: 10px;
+                    padding-right: 10px;
+                    spacing: 6px;
+
+                    Text {
+                        text: line.user;
+                        color: line.tint;
+                        font-family: Ck.sans;
+                        font-size: 11px;
+                        font-weight: 600;
+                        vertical-alignment: center;
+                    }
+
+                    Text {
+                        text: line.message;
+                        color: #ffffffd9;
+                        font-family: Ck.sans;
+                        font-size: 11px;
+                        vertical-alignment: center;
+                    }
+                }
+            }
+        }
+    }
+
+    // ── pastki boshqaruv ──
+    Rectangle {
+        x: 16px;
+        y: parent.height - self.height - 30px - Ck.safe-bottom;
+        width: parent.width - 32px;
+        height: 62px;
+        border-radius: 18px;
+        border-width: 1px;
+        border-color: #ffffff1f;
+        background: #0a0a18cc;
+
+        HorizontalLayout {
+            padding: 12px;
+            spacing: 10px;
+
+            Rectangle {
+                horizontal-stretch: 1;
+                height: 38px;
+                border-radius: 10px;
+                border-width: 1px;
+                border-color: #ffffff1f;
+                background: #ffffff14;
+
+                HorizontalLayout {
+                    padding-left: 12px;
+                    padding-right: 12px;
+
+                    Rectangle {
+                        input := TextInput {
+                            width: 100%;
+                            height: 100%;
+                            vertical-alignment: center;
+                            font-family: Ck.sans;
+                            font-size: 12px;
+                            color: #ffffff;
+                            text <=> root.message;
+                            accepted => {
+                                root.send();
+                            }
+                        }
+
+                        if input.text == "": Text {
+                            x: 0;
+                            width: parent.width;
+                            height: parent.height;
+                            text: "Xabar yozing...";
+                            color: #ffffff73;
+                            font-family: Ck.sans;
+                            font-size: 12px;
+                            vertical-alignment: center;
+                        }
+                    }
+                }
+            }
+
+            CkGlassIconButton {
+                icon: CkIcons.send;
+                size: 38px;
+                accent: true;
+                clicked => {
+                    root.send();
+                }
+            }
+
+            CkGlassIconButton {
+                icon: CkIcons.heart;
+                size: 38px;
+                clicked => {
+                    root.like();
+                }
+            }
+        }
+    }
+}

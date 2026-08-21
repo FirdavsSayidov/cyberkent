@@ -1,0 +1,650 @@
+// ═══════════════════════════════════════════════════════════════════════════
+// SOTUVCHI OQIMI — kod bilan kirish, buyurtmalar / sotuvlar / qoldiq tablari,
+// xaridor QR skaneri, yakun ekrani.
+//
+// Manba: StudioProjects/cyberkent/lib/features/seller/*.
+// ═══════════════════════════════════════════════════════════════════════════
+
+import {
+    Ck, CkIcons,
+    CkIcon, CkIconSlot, CkIconButton, CkBadge, CkCoin,
+    CkCard, CkCardFlat, CkHeroCard, CkStat, CkImage,
+    CkPrimaryButton, CkGhostButton, CkField,
+    CkTopBar, CkSectionHead, CkScroll, CkScanFrame, CkListRow, CkDivider,
+} from "ck-common.slint";
+
+export struct CkSellerOrder {
+    id: string,
+    title: string,
+    price: string,
+    emoji: string,
+    buyer: string,
+    bga: color,
+    bgb: color,
+}
+
+export struct CkSellerSale {
+    title: string,
+    time: string,
+    amount: string,
+    icon: string,
+    tint: color,
+}
+
+export struct CkStockRow {
+    title: string,
+    sub: string,
+    qty: string,
+    tint: color,
+    icon: string,
+}
+
+// ── KIRISH ──────────────────────────────────────────────────────────────────
+
+export component SellerLoginPage inherits Rectangle {
+    background: transparent;
+
+    in-out property <string> code;
+    in property <bool> error: false;
+
+    callback back();
+    callback success();
+
+    VerticalLayout {
+        padding-top: Ck.safe-top;
+        padding-bottom: Ck.safe-bottom;
+
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-top: 16px;
+
+            CkIconButton {
+                icon: CkIcons.chev-l;
+                clicked => {
+                    root.back();
+                }
+            }
+
+            Rectangle {
+                horizontal-stretch: 1;
+            }
+        }
+
+        VerticalLayout {
+            vertical-stretch: 1;
+            padding: 20px;
+            padding-top: 12px;
+            spacing: 14px;
+            alignment: start;
+
+            HorizontalLayout {
+                alignment: center;
+                Rectangle {
+                    width: 88px;
+                    height: 88px;
+                    border-radius: 24px;
+                    background: @linear-gradient(135deg, Ck.magenta, Ck.amber);
+                    drop-shadow-blur: 30px;
+                    drop-shadow-color: Ck.magenta.transparentize(0.6);
+
+                    CkIcon {
+                        commands: CkIcons.shop;
+                        size: 44px;
+                        tint: Ck.bg1;
+                    }
+                }
+            }
+
+            VerticalLayout {
+                spacing: 6px;
+
+                Text {
+                    text: "SOTUVCHI · DO'KON";
+                    color: Ck.magenta;
+                    font-family: Ck.mono;
+                    font-size: 10px;
+                    letter-spacing: 1.8px;
+                    horizontal-alignment: center;
+                }
+
+                Text {
+                    text: "Sotuvchi kodi";
+                    color: Ck.text;
+                    font-family: Ck.sans;
+                    font-size: 26px;
+                    font-weight: 600;
+                    horizontal-alignment: center;
+                }
+
+                Text {
+                    text: "Do'kon kodini kiriting";
+                    color: Ck.text-dim;
+                    font-family: Ck.sans;
+                    font-size: 13px;
+                    horizontal-alignment: center;
+                }
+            }
+
+            CkField {
+                label: "SOTUVCHI KODI";
+                placeholder: "CK-SELL-XXXX";
+                text <=> root.code;
+                accepted => {
+                    root.success();
+                }
+            }
+
+            if root.error: Text {
+                text: "Kod noto'g'ri yoki muddati o'tgan";
+                color: Ck.danger;
+                font-family: Ck.sans;
+                font-size: 12px;
+                horizontal-alignment: center;
+            }
+
+            CkPrimaryButton {
+                text: "Kirish";
+                icon: CkIcons.arrow-r;
+                clicked => {
+                    root.success();
+                }
+            }
+        }
+    }
+}
+
+// ── BUYURTMALAR (tab 0) ─────────────────────────────────────────────────────
+
+export component SellerOrdersPage inherits Rectangle {
+    background: transparent;
+
+    in property <bool> active: true;
+
+    in property <[CkSellerOrder]> orders: [
+        {
+            id: "O-9F4A", title: "CK Gaming Headset", price: "850", emoji: "🎧",
+            buyer: "Aziz B.", bga: #4a1a5a, bgb: #1d0f4a,
+        },
+        {
+            id: "O-8E2B", title: "CK Hoodie M", price: "200", emoji: "🧥",
+            buyer: "Nilufar K.", bga: #1a3a4a, bgb: #0f1d4a,
+        },
+        {
+            id: "O-7C8D", title: "Mech Keyboard", price: "1,200", emoji: "🎮",
+            buyer: "Bobur R.", bga: #4a1a3a, bgb: #2a0f1d,
+        },
+    ];
+
+    callback sign-out();
+    callback order-clicked(index: int);
+
+    CkScroll {
+        CkTopBar {
+            eyebrow: "SOTUVCHI · BUYURTMALAR";
+            title: "Yangi buyurtmalar";
+
+            VerticalLayout {
+                alignment: center;
+                CkIconButton {
+                    icon: CkIcons.logout;
+                    tint: Ck.danger;
+                    clicked => {
+                        root.sign-out();
+                    }
+                }
+            }
+        }
+
+        VerticalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-top: 6px;
+            spacing: 10px;
+
+            for o[index] in root.orders: CkCard {
+                clicked => {
+                    root.order-clicked(index);
+                }
+
+                HorizontalLayout {
+                    padding: 12px;
+                    spacing: 12px;
+
+                    CkImage {
+                        width: 60px;
+                        height: 60px;
+                        radius: 14px;
+                        bga: o.bga;
+                        bgb: o.bgb;
+
+                        Text {
+                            text: o.emoji;
+                            font-size: 28px;
+                            horizontal-alignment: center;
+                            vertical-alignment: center;
+                        }
+                    }
+
+                    VerticalLayout {
+                        horizontal-stretch: 1;
+                        alignment: center;
+                        spacing: 4px;
+
+                        Text {
+                            text: o.title;
+                            color: Ck.text;
+                            font-family: Ck.sans;
+                            font-size: 14px;
+                            font-weight: 600;
+                            overflow: elide;
+                        }
+
+                        Text {
+                            text: "#" + o.id + " · " + o.buyer;
+                            color: Ck.text-dim;
+                            font-family: Ck.mono;
+                            font-size: 11px;
+                            overflow: elide;
+                        }
+
+                        HorizontalLayout {
+                            alignment: start;
+                            CkBadge {
+                                text: "SKANER QILISH";
+                                tint: Ck.amber;
+                            }
+                        }
+                    }
+
+                    VerticalLayout {
+                        alignment: center;
+                        HorizontalLayout {
+                            spacing: 4px;
+                            alignment: end;
+                            Text {
+                                text: o.price;
+                                color: Ck.cyan;
+                                font-family: Ck.mono;
+                                font-size: 14px;
+                                font-weight: 700;
+                                vertical-alignment: center;
+                            }
+                            VerticalLayout {
+                                alignment: center;
+                                CkCoin { size: 13px; }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ── SOTUVLAR (tab 2) ────────────────────────────────────────────────────────
+
+export component SellerSalesPage inherits Rectangle {
+    background: transparent;
+
+    in property <bool> active: true;
+    in property <string> today-count: "24";
+    in property <string> today-revenue: "8,450";
+
+    in property <[CkSellerSale]> sales: [
+        { title: "CK Gaming Headset", time: "Bugun · 14:22", amount: "+850", icon: CkIcons.package, tint: #00e5ff },
+        { title: "CK Hoodie M", time: "Bugun · 12:05", amount: "+200", icon: CkIcons.shop, tint: #7c4dff },
+        { title: "Cap CKNT", time: "Bugun · 10:41", amount: "+80", icon: CkIcons.gift, tint: #ff2d95 },
+        { title: "VIP Pass", time: "Kecha · 18:30", amount: "+5,000", icon: CkIcons.star, tint: #ffb547 },
+    ];
+
+    CkScroll {
+        CkTopBar {
+            eyebrow: "SOTUVCHI · TARIX";
+            title: "Sotuvlar";
+        }
+
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-top: 6px;
+            spacing: 10px;
+
+            CkStat {
+                horizontal-stretch: 1;
+                label: "BUGUN SOTILDI";
+                value: root.today-count;
+                tint: Ck.cyan;
+            }
+
+            CkStat {
+                horizontal-stretch: 1;
+                label: "BUGUNGI DAROMAD";
+                value: root.today-revenue;
+                tint: Ck.mint;
+                coin: true;
+            }
+        }
+
+        CkSectionHead {
+            title: "So'nggi sotuvlar";
+            action: "";
+        }
+
+        VerticalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            spacing: 8px;
+
+            for s in root.sales: CkCardFlat {
+                interactive: false;
+
+                HorizontalLayout {
+                    padding: 12px;
+                    spacing: 12px;
+
+                    VerticalLayout {
+                        alignment: center;
+                        Rectangle {
+                            width: 38px;
+                            height: 38px;
+                            border-radius: 12px;
+                            background: s.tint.transparentize(0.88);
+
+                            CkIcon {
+                                commands: s.icon;
+                                size: 18px;
+                                tint: s.tint;
+                            }
+                        }
+                    }
+
+                    VerticalLayout {
+                        horizontal-stretch: 1;
+                        alignment: center;
+                        spacing: 2px;
+
+                        Text {
+                            text: s.title;
+                            color: Ck.text;
+                            font-family: Ck.sans;
+                            font-size: 13px;
+                            font-weight: 500;
+                            overflow: elide;
+                        }
+
+                        Text {
+                            text: s.time;
+                            color: Ck.text-mute;
+                            font-family: Ck.mono;
+                            font-size: 10px;
+                            overflow: elide;
+                        }
+                    }
+
+                    VerticalLayout {
+                        alignment: center;
+                        HorizontalLayout {
+                            spacing: 4px;
+                            alignment: end;
+                            Text {
+                                text: s.amount;
+                                color: Ck.mint;
+                                font-family: Ck.mono;
+                                font-size: 14px;
+                                font-weight: 600;
+                                vertical-alignment: center;
+                            }
+                            VerticalLayout {
+                                alignment: center;
+                                CkCoin { size: 13px; }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ── QOLDIQ (tab 3) ──────────────────────────────────────────────────────────
+
+export component SellerStockPage inherits Rectangle {
+    background: transparent;
+
+    in property <bool> active: true;
+
+    in property <[CkStockRow]> items: [
+        { title: "CK Gaming Headset", sub: "RGB · 7.1 surround", qty: "12", tint: #00e5ff, icon: CkIcons.package },
+        { title: "CK Hoodie", sub: "M / L / XL", qty: "48", tint: #7c4dff, icon: CkIcons.shop },
+        { title: "Mech Keyboard", sub: "Hot-swap", qty: "5", tint: #ffb547, icon: CkIcons.game },
+        { title: "Cap CKNT", sub: "Unisex", qty: "0", tint: #ff5577, icon: CkIcons.gift },
+        { title: "VIP Pass", sub: "Yillik", qty: "23", tint: #5bffc2, icon: CkIcons.star },
+    ];
+
+    CkScroll {
+        CkTopBar {
+            eyebrow: "SOTUVCHI · OMBOR";
+            title: "Qoldiq";
+        }
+
+        VerticalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-top: 6px;
+            spacing: 8px;
+
+            for it in root.items: CkListRow {
+                icon: it.icon;
+                tint: it.tint;
+                title: it.title;
+                sub: it.sub;
+                value: it.qty + " dona";
+                value-tint: it.qty == "0" ? Ck.danger : Ck.text;
+                chevron: false;
+                interactive: false;
+            }
+        }
+    }
+}
+
+// ── XARIDOR QR SKANERI ──────────────────────────────────────────────────────
+
+export component SellerScannerPage inherits Rectangle {
+    background: #06060f;
+
+    in property <bool> active: true;
+
+    callback back();
+    callback confirmed();
+
+    VerticalLayout {
+        padding-top: Ck.safe-top;
+        padding-bottom: Ck.safe-bottom;
+
+        HorizontalLayout {
+            padding-left: 16px;
+            padding-right: 16px;
+            padding-top: 14px;
+            spacing: 8px;
+
+            CkIconButton {
+                icon: CkIcons.chev-l;
+                clicked => {
+                    root.back();
+                }
+            }
+
+            VerticalLayout {
+                horizontal-stretch: 1;
+                alignment: center;
+                Text {
+                    text: "XARIDOR QR";
+                    color: #ffffff;
+                    font-family: Ck.mono;
+                    font-size: 12px;
+                    letter-spacing: 1.8px;
+                    horizontal-alignment: center;
+                }
+            }
+
+            Rectangle {
+                width: 36px;
+            }
+        }
+
+        VerticalLayout {
+            vertical-stretch: 1;
+            alignment: center;
+            spacing: 22px;
+
+            HorizontalLayout {
+                alignment: center;
+                CkScanFrame {
+                    size: 268px;
+                    tint: Ck.magenta;
+                    running: root.active;
+                }
+            }
+
+            Text {
+                text: "Xaridorning to'lov QR kodini skanerlang";
+                color: #ffffffcc;
+                font-family: Ck.sans;
+                font-size: 14px;
+                horizontal-alignment: center;
+                wrap: word-wrap;
+            }
+        }
+
+        VerticalLayout {
+            padding-left: 24px;
+            padding-right: 24px;
+            padding-bottom: 8px;
+
+            CkPrimaryButton {
+                text: "To'lov qabul qilindi (demo)";
+                icon: CkIcons.check;
+                clicked => {
+                    root.confirmed();
+                }
+            }
+        }
+    }
+}
+
+// ── YAKUN ──────────────────────────────────────────────────────────────────
+
+export component SellerCompletedPage inherits Rectangle {
+    background: transparent;
+
+    in property <bool> active: true;
+    in property <string> product: "CK Gaming Headset";
+    in property <string> amount: "850";
+
+    callback done();
+
+    VerticalLayout {
+        padding-top: Ck.safe-top;
+        padding-bottom: Ck.safe-bottom;
+
+        VerticalLayout {
+            vertical-stretch: 1;
+            padding: 32px;
+            alignment: center;
+            spacing: 12px;
+
+            Text {
+                text: "SOTUV YAKUNLANDI";
+                color: Ck.mint;
+                font-family: Ck.mono;
+                font-size: 10px;
+                letter-spacing: 1.8px;
+                horizontal-alignment: center;
+            }
+
+            HorizontalLayout {
+                alignment: center;
+                padding-top: 8px;
+                padding-bottom: 8px;
+
+                Rectangle {
+                    width: 150px;
+                    height: 150px;
+
+                    Rectangle {
+                        width: 150px;
+                        height: 150px;
+                        border-radius: 75px;
+                        background: @radial-gradient(circle, Ck.mint.transparentize(0.55) 0%, #00000000 70%);
+                    }
+
+                    Rectangle {
+                        width: 112px;
+                        height: 112px;
+                        border-radius: 56px;
+                        background: @linear-gradient(135deg, #5bffc2, #00e5ff);
+                        drop-shadow-blur: 36px;
+                        drop-shadow-color: Ck.mint.transparentize(0.5);
+
+                        CkIcon {
+                            commands: CkIcons.check;
+                            size: 56px;
+                            tint: Ck.bg1;
+                        }
+                    }
+                }
+            }
+
+            Text {
+                text: "Sotuv muvaffaqiyatli";
+                color: Ck.mint;
+                font-family: Ck.sans;
+                font-size: 24px;
+                font-weight: 700;
+                horizontal-alignment: center;
+            }
+
+            HorizontalLayout {
+                spacing: 4px;
+                alignment: center;
+                Text {
+                    text: root.product + " · " + root.amount;
+                    color: Ck.text;
+                    font-family: Ck.sans;
+                    font-size: 15px;
+                    font-weight: 500;
+                    vertical-alignment: center;
+                    wrap: word-wrap;
+                }
+                VerticalLayout {
+                    alignment: center;
+                    CkCoin { size: 14px; }
+                }
+            }
+
+            HorizontalLayout {
+                alignment: center;
+                CkBadge {
+                    text: "LEDGER · TASDIQLANDI";
+                    tint: Ck.mint;
+                    dot: true;
+                }
+            }
+        }
+
+        VerticalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-bottom: 8px;
+
+            CkPrimaryButton {
+                text: "Keyingi buyurtma";
+                icon: CkIcons.arrow-r;
+                clicked => {
+                    root.done();
+                }
+            }
+        }
+    }
+}

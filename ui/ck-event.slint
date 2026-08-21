@@ -1,0 +1,661 @@
+// ═══════════════════════════════════════════════════════════════════════════
+// 07 — TADBIR TAFSILOTI, 08 — KIRISH QR
+// ═══════════════════════════════════════════════════════════════════════════
+
+import {
+    Ck, CkIcons,
+    CkIcon, CkIconSlot, CkIconButton, CkAvatar, CkBadge,
+    CkCardFlat, CkImage, CkStat, CkQr, CkDivider,
+    CkPrimaryButton, CkSecondaryButton,
+} from "ck-common.slint";
+
+export struct CkAgendaRow {
+    time: string,
+    title: string,
+}
+
+// Rasm ustidagi yumaloq tugma — orqa fon qorong'i, chunki gradient ustida turadi.
+component CkGlassIconButton inherits Rectangle {
+    in property <string> icon;
+
+    callback clicked();
+
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    border-width: 1px;
+    border-color: #ffffff33;
+    background: touch.pressed ? #0a0a18e6 : #0a0a1899;
+    animate background { duration: 140ms; easing: ease-out; }
+
+    touch := TouchArea {
+        clicked => {
+            root.clicked();
+        }
+    }
+
+    CkIcon {
+        commands: root.icon;
+        size: 16px;
+        tint: #ffffff;
+    }
+}
+
+// ── 07 TADBIR TAFSILOTI ────────────────────────────────────────────────────
+
+export component EventDetailPage inherits Rectangle {
+    // ── Flutter `events/event_detail_screen.dart` bilan 1:1 ──
+    // Katta poster (orqaga tugmasi + tur badge) → "7 OKT · 14:10 — 15:10" →
+    // nom → sana/joy qatori → tashkilotchi (avatar + TASDIQLANGAN) → uch stat
+    // (SANA / VAQT / DAVOMIYLIK) → HAQIDA → pastda xarita tugmasi +
+    // "Tadbirga yozilish".
+    background: Ck.bg0;
+
+    in property <string> title: "Ochilish marosimi";
+    in property <string> when: "7 OKT · 14:10 — 15:10";
+    in property <string> date-line: "7 oktabr · 14:10";
+    in property <string> place: "Asosiy sahna";
+    in property <string> organiser: "Asosiy sahna";
+    in property <string> organiser-initials: "AS";
+    in property <string> stat-date: "7 OKT";
+    in property <string> stat-time: "14:10";
+    in property <string> stat-duration: "1 soat";
+    in property <string> tag: "TAQDIMOT";
+    in property <string> about: "Cyberkent rasmiy ochilishi va kun rejasi taqdimoti";
+
+    callback back();
+    callback favourite();
+    callback share();
+    callback add-to-calendar();
+    callback register();
+
+    Flickable {
+        width: 100%;
+        height: parent.height - 104px;
+        viewport-width: self.width;
+        viewport-height: body.preferred-height;
+
+        body := VerticalLayout {
+            width: parent.width;
+            alignment: start;
+
+            // ── POSTER ──────────────────────────────────────────────────
+            Rectangle {
+                height: 330px;
+                background: @linear-gradient(160deg, #2a4a8a, #1a2a5a);
+                clip: true;
+
+                Rectangle {
+                    x: parent.width * 0.2 - self.width / 2;
+                    y: -40px;
+                    width: parent.width * 0.7;
+                    height: self.width;
+                    background: @radial-gradient(circle, #ffffff14 0%, #00000000 60%);
+                }
+
+                CkIcon {
+                    commands: CkIcons.stream;
+                    size: 62px;
+                    tint: #ffffff;
+                }
+
+                // Tur badge — pastki chap.
+                Rectangle {
+                    x: 20px;
+                    y: parent.height - self.height - 18px;
+                    height: 30px;
+                    width: tg.preferred-width + 26px;
+                    border-radius: 15px;
+                    border-width: 1px;
+                    border-color: Ck.cyan.transparentize(0.4);
+                    background: #0a0a18aa;
+
+                    tg := Text {
+                        text: root.tag;
+                        color: Ck.cyan;
+                        font-family: Ck.mono;
+                        font-size: 12px;
+                        letter-spacing: 1.8px;
+                        horizontal-alignment: center;
+                        vertical-alignment: center;
+                    }
+                }
+            }
+
+            // ── MA'LUMOT ────────────────────────────────────────────────
+            VerticalLayout {
+                padding-left: 20px;
+                padding-right: 20px;
+                padding-top: 16px;
+                spacing: 12px;
+
+                Text {
+                    text: root.when;
+                    color: Ck.cyan;
+                    font-family: Ck.mono;
+                    font-size: 13px;
+                    letter-spacing: 1.6px;
+                }
+
+                Text {
+                    text: root.title;
+                    color: Ck.text;
+                    font-family: Ck.sans;
+                    font-size: 30px;
+                    font-weight: 700;
+                    wrap: word-wrap;
+                }
+
+                HorizontalLayout {
+                    spacing: 6px;
+
+                    VerticalLayout {
+                        alignment: center;
+                        CkIcon {
+                            commands: CkIcons.calendar;
+                            size: 16px;
+                            tint: Ck.cyan;
+                        }
+                    }
+
+                    Text {
+                        text: root.date-line;
+                        color: Ck.text-dim;
+                        font-family: Ck.sans;
+                        font-size: 15px;
+                        vertical-alignment: center;
+                    }
+
+                    Rectangle { width: 10px; }
+
+                    VerticalLayout {
+                        alignment: center;
+                        CkIcon {
+                            commands: CkIcons.pin;
+                            size: 16px;
+                            tint: Ck.cyan;
+                        }
+                    }
+
+                    Text {
+                        text: root.place;
+                        color: Ck.text-dim;
+                        font-family: Ck.sans;
+                        font-size: 15px;
+                        vertical-alignment: center;
+                        horizontal-stretch: 1;
+                        overflow: elide;
+                    }
+                }
+
+                // Tashkilotchi.
+                HorizontalLayout {
+                    spacing: 12px;
+
+                    VerticalLayout {
+                        alignment: center;
+                        CkAvatar {
+                            size: 44px;
+                            initials: root.organiser-initials;
+                        }
+                    }
+
+                    VerticalLayout {
+                        horizontal-stretch: 1;
+                        alignment: center;
+                        spacing: 2px;
+
+                        Text {
+                            text: root.organiser;
+                            color: Ck.text;
+                            font-family: Ck.sans;
+                            font-size: 15px;
+                            font-weight: 600;
+                        }
+
+                        Text {
+                            text: "Tashkilotchi";
+                            color: Ck.text-dim;
+                            font-family: Ck.sans;
+                            font-size: 13px;
+                        }
+                    }
+
+                    VerticalLayout {
+                        alignment: center;
+                        CkBadge {
+                            text: "TASDIQLANGAN";
+                            tint: Ck.text-dim;
+                        }
+                    }
+                }
+
+                // Uch stat.
+                HorizontalLayout {
+                    spacing: 10px;
+
+                    for st in [
+                        { label: "SANA", value: root.stat-date, accent: false },
+                        { label: "VAQT", value: root.stat-time, accent: true },
+                        { label: "DAVOMIYLIK", value: root.stat-duration, accent: false },
+                    ]: Rectangle {
+                        horizontal-stretch: 1;
+                        height: 84px;
+                        border-radius: 16px;
+                        border-width: 1px;
+                        border-color: Ck.line;
+                        background: Ck.bg1;
+
+                        VerticalLayout {
+                            padding: 14px;
+                            spacing: 6px;
+
+                            Text {
+                                text: st.label;
+                                color: Ck.text-mute;
+                                font-family: Ck.mono;
+                                font-size: 10px;
+                                letter-spacing: 1.6px;
+                            }
+
+                            Text {
+                                text: st.value;
+                                color: st.accent ? Ck.cyan : Ck.text;
+                                font-family: Ck.sans;
+                                font-size: 20px;
+                                font-weight: 700;
+                            }
+                        }
+                    }
+                }
+
+                CkDivider { }
+
+                Text {
+                    text: "HAQIDA";
+                    color: Ck.cyan;
+                    font-family: Ck.mono;
+                    font-size: 12px;
+                    letter-spacing: 2px;
+                }
+
+                Text {
+                    text: root.about;
+                    color: Ck.text-dim;
+                    font-family: Ck.sans;
+                    font-size: 16px;
+                    wrap: word-wrap;
+                }
+            }
+        }
+    }
+
+    // ── ORQAGA TUGMASI ──────────────────────────────────────────────────
+    CkIconButton {
+        x: 20px;
+        y: Ck.safe-top + 10px;
+        icon: CkIcons.chev-l;
+        clicked => {
+            root.back();
+        }
+    }
+
+    // ── PASTKI CTA ──────────────────────────────────────────────────────
+    Rectangle {
+        x: 0;
+        y: parent.height - self.height;
+        width: parent.width;
+        height: 104px;
+        background: @linear-gradient(180deg, #06060f00 0%, #06060fe6 40%);
+
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-top: 20px;
+            padding-bottom: 28px;
+            spacing: 12px;
+
+            // Xarita tugmasi.
+            Rectangle {
+                width: 56px;
+                border-radius: 16px;
+                border-width: 1px;
+                border-color: Ck.line-strong;
+                background: mp.pressed ? Ck.bg3 : Ck.bg2;
+                animate background { duration: 110ms; }
+
+                mp := TouchArea {
+                    clicked => {
+                        root.share();
+                    }
+                }
+
+                CkIcon {
+                    commands: CkIcons.pin;
+                    size: 18px;
+                    tint: Ck.text;
+                }
+            }
+
+            Rectangle {
+                horizontal-stretch: 1;
+                border-radius: 16px;
+                background: @linear-gradient(135deg, #00e5ff, #7c4dff);
+                opacity: rg.pressed ? 0.85 : 1.0;
+                animate opacity { duration: 110ms; }
+                drop-shadow-blur: 16px;
+                drop-shadow-color: Ck.cyan.transparentize(0.6);
+
+                rg := TouchArea {
+                    clicked => {
+                        root.register();
+                    }
+                }
+
+                HorizontalLayout {
+                    alignment: center;
+                    spacing: 10px;
+
+                    VerticalLayout {
+                        alignment: center;
+                        CkIcon {
+                            commands: CkIcons.calendar;
+                            size: 17px;
+                            tint: Ck.bg1;
+                        }
+                    }
+
+                    Text {
+                        text: "Tadbirga yozilish";
+                        color: Ck.bg1;
+                        font-family: Ck.sans;
+                        font-size: 16px;
+                        font-weight: 700;
+                        vertical-alignment: center;
+                    }
+                }
+            }
+        }
+    }
+}
+
+export component EntryQrPage inherits Rectangle {
+    // ── Flutter `user/entry_qr_screen.dart` bilan 1:1 ──
+    // NavBar (KIRISH QR / Kirish propuski) + "Kirishda bu QR kodni ko'rsating"
+    // → markazda skan-ramkali katta QR (o'rtasida CK belgisi) → pastda karta:
+    // TIKET ID + TASDIQLANGAN, "Identifikatsiya xavfsiz tarzda tekshiriladi",
+    // EGASI / KIRISH PROPUSKI + avatar.
+    background: transparent;
+
+    in property <bool> active: true;
+    in property <string> ticket-id: "B0SdbAj2DdKgXcBtfB38";
+    in property <string> owner: "Aziz Karimov";
+    in property <string> owner-initials: "AK";
+
+    callback back();
+
+    VerticalLayout {
+        padding-top: Ck.safe-top;
+        padding-bottom: Ck.safe-bottom;
+
+        // ── NAVBAR ──────────────────────────────────────────────────────
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-top: 14px;
+            spacing: 14px;
+
+            VerticalLayout {
+                alignment: start;
+                CkIconButton {
+                    icon: CkIcons.chev-l;
+                    clicked => {
+                        root.back();
+                    }
+                }
+            }
+
+            VerticalLayout {
+                horizontal-stretch: 1;
+                spacing: 3px;
+
+                Text {
+                    text: "KIRISH QR";
+                    color: Ck.cyan;
+                    font-family: Ck.mono;
+                    font-size: 11px;
+                    letter-spacing: 2px;
+                }
+
+                Text {
+                    text: "Kirish propuski";
+                    color: Ck.text;
+                    font-family: Ck.sans;
+                    font-size: 26px;
+                    font-weight: 700;
+                }
+            }
+        }
+
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-top: 6px;
+
+            Text {
+                text: "Kirishda bu QR kodni ko'rsating";
+                color: Ck.text-dim;
+                font-family: Ck.sans;
+                font-size: 14px;
+            }
+        }
+
+        // ── QR (markazda) ───────────────────────────────────────────────
+        VerticalLayout {
+            vertical-stretch: 1;
+            alignment: center;
+
+            HorizontalLayout {
+                alignment: center;
+
+                Rectangle {
+                    width: 300px;
+                    height: 300px;
+
+                    // Yorqin nur (orqa fon).
+                    Rectangle {
+                        width: 300px;
+                        height: 300px;
+                        border-radius: 40px;
+                        background: Ck.cyan.transparentize(0.82);
+                        drop-shadow-blur: 60px;
+                        drop-shadow-color: Ck.cyan.transparentize(0.55);
+                    }
+
+                    // Oq QR plitasi.
+                    Rectangle {
+                        width: 262px;
+                        height: 262px;
+                        border-radius: 24px;
+                        background: #ffffff;
+
+                        CkQr {
+                            size: 226px;
+                            payload: root.ticket-id;
+                        }
+
+                        // Markazdagi CK belgisi.
+                        Rectangle {
+                            width: 46px;
+                            height: 46px;
+                            border-radius: 12px;
+                            border-width: 2px;
+                            border-color: Ck.cyan;
+                            background: #0a0a18;
+
+                            Text {
+                                text: "CK";
+                                color: Ck.cyan;
+                                font-family: Ck.mono;
+                                font-size: 16px;
+                                font-weight: 700;
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
+                            }
+                        }
+                    }
+
+                    // Skan-ramka burchaklari.
+                    for c in 4: Rectangle {
+                        property <bool> right: c == 1 || c == 2;
+                        property <bool> bottom: c >= 2;
+                        x: self.right ? parent.width - self.width : 0px;
+                        y: self.bottom ? parent.height - self.height : 0px;
+                        width: 34px;
+                        height: 34px;
+
+                        Rectangle {
+                            x: 0;
+                            y: parent.bottom ? parent.height - self.height : 0px;
+                            width: parent.width;
+                            height: 3px;
+                            background: Ck.cyan;
+                        }
+
+                        Rectangle {
+                            x: parent.right ? parent.width - self.width : 0px;
+                            y: 0;
+                            width: 3px;
+                            height: parent.height;
+                            background: Ck.cyan;
+                        }
+                    }
+                }
+            }
+        }
+
+        // ── TIKET KARTASI ───────────────────────────────────────────────
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-bottom: 8px;
+
+            CkCardFlat {
+                interactive: false;
+
+                VerticalLayout {
+                    padding: 18px;
+                    spacing: 14px;
+
+                    HorizontalLayout {
+                        spacing: 10px;
+
+                        VerticalLayout {
+                            horizontal-stretch: 1;
+                            spacing: 4px;
+
+                            Text {
+                                text: "TIKET ID";
+                                color: Ck.text-mute;
+                                font-family: Ck.mono;
+                                font-size: 11px;
+                                letter-spacing: 1.8px;
+                            }
+
+                            Text {
+                                text: root.ticket-id;
+                                color: Ck.cyan;
+                                font-family: Ck.mono;
+                                font-size: 16px;
+                                font-weight: 600;
+                                overflow: elide;
+                            }
+                        }
+
+                        VerticalLayout {
+                            alignment: center;
+                            CkBadge {
+                                text: "TASDIQLANGAN";
+                                tint: Ck.mint;
+                                dot: true;
+                            }
+                        }
+                    }
+
+                    CkDivider { }
+
+                    HorizontalLayout {
+                        spacing: 10px;
+
+                        VerticalLayout {
+                            alignment: center;
+                            CkIcon {
+                                commands: CkIcons.shield;
+                                size: 18px;
+                                tint: Ck.mint;
+                            }
+                        }
+
+                        Text {
+                            text: "Identifikatsiya xavfsiz tarzda tekshiriladi";
+                            color: Ck.text-dim;
+                            font-family: Ck.sans;
+                            font-size: 14px;
+                            vertical-alignment: center;
+                            horizontal-stretch: 1;
+                        }
+                    }
+
+                    CkDivider { }
+
+                    HorizontalLayout {
+                        spacing: 10px;
+
+                        VerticalLayout {
+                            horizontal-stretch: 1;
+                            spacing: 4px;
+
+                            Text {
+                                text: "EGASI";
+                                color: Ck.text-mute;
+                                font-family: Ck.mono;
+                                font-size: 11px;
+                                letter-spacing: 1.8px;
+                            }
+
+                            Text {
+                                text: root.owner;
+                                color: Ck.text;
+                                font-family: Ck.sans;
+                                font-size: 16px;
+                                font-weight: 600;
+                            }
+                        }
+
+                        VerticalLayout {
+                            alignment: center;
+                            spacing: 4px;
+
+                            Text {
+                                text: "KIRISH PROPUSKI";
+                                color: Ck.text-mute;
+                                font-family: Ck.mono;
+                                font-size: 11px;
+                                letter-spacing: 1.8px;
+                                horizontal-alignment: right;
+                            }
+
+                            HorizontalLayout {
+                                alignment: end;
+                                CkAvatar {
+                                    size: 36px;
+                                    initials: root.owner-initials;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

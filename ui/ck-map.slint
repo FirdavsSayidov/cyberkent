@@ -1,0 +1,263 @@
+// ═══════════════════════════════════════════════════════════════════════════
+// XARITA — Flutter `map/interactive_map_screen.dart` bilan 1:1.
+//
+// Sarlavha "Xarita" → qidiruv ("Stend qidirish...") + QR tugmasi → to'liq
+// ekran izometrik neon plan (Rust chizadi, `Map3D.scene`), ustida xona
+// yorliqlari (pill: harf + "B2 — Asosiy sahna"), kompas N, o'ngda pastda
+// qayta o'rnatish / aylantirish tugmalari, pastda ko'rsatma paneli.
+// ═══════════════════════════════════════════════════════════════════════════
+
+import {
+    Ck, CkIcons, Map3D, CkMapLabel,
+    CkIcon, CkIconSlot, CkIconButton, CkBadge,
+    CkSearchInput,
+} from "ck-common.slint";
+
+export component MapPage inherits Rectangle {
+    background: transparent;
+
+    in property <bool> active: true;
+
+    callback scan-clicked();
+    callback search-changed(text: string);
+
+    // Aylantirish qadami (Flutter: 90° qadam bilan buriladi).
+    function rotate-by(d: float) {
+        Map3D.yaw = Map3D.yaw + d;
+        Map3D.refresh();
+    }
+
+    VerticalLayout {
+        padding-top: Ck.safe-top;
+
+        // ── SARLAVHA ────────────────────────────────────────────────────
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-top: 12px;
+            padding-bottom: 8px;
+
+            Text {
+                text: "Xarita";
+                color: Ck.text;
+                font-family: Ck.sans;
+                font-size: 28px;
+                font-weight: 700;
+            }
+
+            Rectangle { horizontal-stretch: 1; }
+        }
+
+        // ── QIDIRUV + QR ────────────────────────────────────────────────
+        HorizontalLayout {
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-bottom: 6px;
+            spacing: 10px;
+
+            search := CkSearchInput {
+                horizontal-stretch: 1;
+                placeholder: "Stend qidirish...";
+                edited => {
+                    root.search-changed(search.text);
+                }
+            }
+
+            CkIconButton {
+                icon: CkIcons.qr;
+                size: 44px;
+                icon-size: 20px;
+                clicked => {
+                    root.scan-clicked();
+                }
+            }
+        }
+
+        // ── XARITA MAYDONI ──────────────────────────────────────────────
+        Rectangle {
+            vertical-stretch: 1;
+
+            // Rust chizgan izometrik sahna.
+            scene := Image {
+                width: 100%;
+                height: 100%;
+                source: Map3D.scene;
+                image-fit: contain;
+            }
+
+            // Xona yorliqlari — anker (0..1) rasm koordinatasида.
+            for l[i] in Map3D.labels: Rectangle {
+                x: scene.width * l.x - self.width / 2;
+                y: scene.height * l.y - self.height / 2
+                    - (l.entrance ? 0px : 16px);
+                width: pill.preferred-width + 24px;
+                height: 34px;
+                border-radius: 17px;
+                border-width: 1px;
+                border-color: l.tint.transparentize(0.45);
+                background: #0a0a18d9;
+
+                TouchArea {
+                    clicked => {
+                        Map3D.selected = Map3D.selected == i ? -1 : i;
+                        Map3D.refresh();
+                    }
+                }
+
+                pill := HorizontalLayout {
+                    padding-left: 6px;
+                    padding-right: 10px;
+                    spacing: 8px;
+
+                    VerticalLayout {
+                        alignment: center;
+                        Rectangle {
+                            width: 24px;
+                            height: 24px;
+                            border-radius: 12px;
+                            border-width: 1px;
+                            border-color: l.tint.transparentize(0.3);
+                            background: l.tint.transparentize(0.82);
+
+                            Text {
+                                text: l.code == "A1" ? "A" : (l.code == "B2" ? "B" : (l.code == "C3" ? "C" : (l.code == "D4" ? "D" : (l.code == "E5" ? "E" : "F"))));
+                                color: l.tint;
+                                font-family: Ck.sans;
+                                font-size: 12px;
+                                font-weight: 700;
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
+                            }
+                        }
+                    }
+
+                    Text {
+                        text: l.code + " — " + l.name;
+                        color: #ffffff;
+                        font-family: Ck.sans;
+                        font-size: 14px;
+                        font-weight: 600;
+                        vertical-alignment: center;
+                    }
+                }
+            }
+
+            // "Siz shu yerdasiz" — kirish yorlig'i ustida.
+            for l[i] in Map3D.labels: Text {
+                visible: l.entrance;
+                x: scene.width * l.x - self.width / 2;
+                y: scene.height * l.y - 52px;
+                text: "Siz shu yerdasiz";
+                color: Ck.mint;
+                font-family: Ck.sans;
+                font-size: 13px;
+                font-weight: 700;
+            }
+
+            // Kompas.
+            Rectangle {
+                x: parent.width - self.width - 20px;
+                y: 8px;
+                width: 54px;
+                height: 54px;
+                border-radius: 27px;
+                border-width: 1px;
+                border-color: Ck.line-strong;
+                background: Ck.bg1.transparentize(0.15);
+
+                VerticalLayout {
+                    alignment: center;
+                    spacing: 1px;
+
+                    Text {
+                        text: "▲";
+                        color: Ck.danger;
+                        font-size: 9px;
+                        horizontal-alignment: center;
+                    }
+
+                    Text {
+                        text: "N";
+                        color: Ck.text;
+                        font-family: Ck.sans;
+                        font-size: 15px;
+                        font-weight: 600;
+                        horizontal-alignment: center;
+                    }
+                }
+            }
+
+            // Qayta o'rnatish / aylantirish.
+            VerticalLayout {
+                x: parent.width - self.width - 20px;
+                y: parent.height - self.height - 76px;
+                width: 54px;
+                spacing: 10px;
+
+                CkIconButton {
+                    icon: CkIcons.refresh;
+                    size: 54px;
+                    icon-size: 22px;
+                    tint: Ck.cyan;
+                    clicked => {
+                        Map3D.yaw = 0;
+                        Map3D.selected = -1;
+                        Map3D.refresh();
+                    }
+                }
+
+                CkIconButton {
+                    icon: CkIcons.refresh;
+                    size: 54px;
+                    icon-size: 22px;
+                    tint: Ck.cyan;
+                    clicked => {
+                        root.rotate-by(1.5708);
+                    }
+                }
+            }
+
+            // Pastki ko'rsatma.
+            Rectangle {
+                x: 20px;
+                y: parent.height - self.height - 16px;
+                width: parent.width - 110px;
+                height: 50px;
+                border-radius: 16px;
+                border-width: 1px;
+                border-color: Ck.line;
+                background: Ck.bg1.transparentize(0.1);
+
+                HorizontalLayout {
+                    padding-left: 16px;
+                    padding-right: 16px;
+                    spacing: 10px;
+
+                    VerticalLayout {
+                        alignment: center;
+                        CkIcon {
+                            commands: CkIcons.game;
+                            size: 16px;
+                            tint: Ck.text-dim;
+                        }
+                    }
+
+                    Text {
+                        text: "Yo'nalishni ko'rish uchun xonani tanlang";
+                        color: Ck.text-dim;
+                        font-family: Ck.sans;
+                        font-size: 13px;
+                        vertical-alignment: center;
+                        horizontal-stretch: 1;
+                        overflow: elide;
+                    }
+                }
+            }
+        }
+
+        // Tab panelga joy.
+        Rectangle {
+            height: Ck.content-bottom;
+        }
+    }
+}
